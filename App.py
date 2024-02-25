@@ -4,7 +4,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from streamlit_agraph import agraph, Node, Edge, Config
 
-
+    
 def main():
     navbar_options = ["Archivo", "Editar", "Ejecutar",
                       "Herramientas", "Ventana", "Ayuda"]
@@ -78,12 +78,6 @@ def draw_graph(G, node_color='yellow'):
     st.pyplot()
 
 
-def get_state():
-    if 'state' not in st.session:
-        st.session['state'] = st.beta_session_state(nodes=[], edges=[], id_map={})
-    return st.session['state']
-
-
 def nuevo_grafo():
     st.sidebar.title("Crear nuevo grafo")
     node_id = st.sidebar.text_input("ID del nodo")
@@ -122,16 +116,9 @@ def nuevo_grafo():
     if edit_node_button:
         for node in st.session_state['nodes']:
             if node.id == selected_node_id:
-                st.session_state['id_map'][selected_node_id] = new_node_id
                 node.id = new_node_id
                 node.label = new_node_label
                 node.color = new_node_color
-
-        for edge in st.session_state['edges']:
-            if edge.source == selected_node_id:
-                edge.source = st.session_state['id_map'][selected_node_id]
-            if edge.to == selected_node_id:
-                edge.to = st.session_state['id_map'][selected_node_id]
 
     config = Config(width=900, height=900, directed=False,
                     nodeHighlightBehavior=True)
