@@ -4,7 +4,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from streamlit_agraph import agraph, Node, Edge, Config
 
-    
+
 def main():
     navbar_options = ["Archivo", "Editar", "Ejecutar",
                       "Herramientas", "Ventana", "Ayuda"]
@@ -84,6 +84,7 @@ def nuevo_grafo():
     node_label = st.sidebar.text_input("Etiqueta del nodo")
     node_color = st.sidebar.color_picker("Color del nodo")
     add_node_button = st.sidebar.button("Agregar nodo")
+
     edge_start = st.sidebar.text_input("ID del nodo de inicio de la arista")
     edge_end = st.sidebar.text_input("ID del nodo final de la arista")
     edge_weight = st.sidebar.text_input("Peso de la arista")
@@ -93,19 +94,23 @@ def nuevo_grafo():
         st.session_state['nodes'] = []
     if 'edges' not in st.session_state:
         st.session_state['edges'] = []
+    if 'id_map' not in st.session_state:
+        st.session_state['id_map'] = {}
 
     if add_node_button:
         st.session_state['nodes'].append(
             Node(id=node_id, label=node_label, color=node_color, font={"color": "white"}))
+        st.session_state['id_map'][node_id] = node_id
 
     if add_edge_button:
         node_ids = [node.id for node in st.session_state['nodes']]
         if edge_start in node_ids and edge_end in node_ids:
-            st.session_state['edges'].append(
-                Edge(source=edge_start, target=edge_end, label=edge_weight))
+            st.session_state['edges'].append(Edge(
+                source=st.session_state['id_map'][edge_start], target=st.session_state['id_map'][edge_end], label=edge_weight))
         else:
             st.error(
                 "Los nodos de inicio y fin deben existir antes de agregar una arista.")
+
     selected_node_id = st.sidebar.selectbox("Selecciona un nodo para editar", options=[
                                             node.id for node in st.session_state['nodes']])
     new_node_id = st.sidebar.text_input("Nuevo ID del nodo")
@@ -116,9 +121,16 @@ def nuevo_grafo():
     if edit_node_button:
         for node in st.session_state['nodes']:
             if node.id == selected_node_id:
+                st.session_state['id_map'][selected_node_id] = new_node_id
                 node.id = new_node_id
                 node.label = new_node_label
                 node.color = new_node_color
+
+        for edge in st.session_state['edges']:
+            if edge.source == selected_node_id:
+                edge.source = st.session_state['id_map'][selected_node_id]
+            if edge.to == selected_node_id:
+                edge.to = st.session_state['id_map'][selected_node_id]
 
     config = Config(width=900, height=900, directed=False,
                     nodeHighlightBehavior=True)
