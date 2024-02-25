@@ -78,16 +78,21 @@ def draw_graph(G, node_color='yellow'):
     st.pyplot()
 
 
+def get_state():
+    if 'state' not in st.session:
+        st.session['state'] = st.beta_session_state(nodes=[], edges=[], id_map={})
+    return st.session['state']
+
+
 def nuevo_grafo():
     st.sidebar.title("Crear nuevo grafo")
     node_id = st.sidebar.text_input("ID del nodo")
     node_label = st.sidebar.text_input("Etiqueta del nodo")
     node_color = st.sidebar.color_picker("Color del nodo")
     add_node_button = st.sidebar.button("Agregar nodo")
-
     edge_start = st.sidebar.text_input("ID del nodo de inicio de la arista")
     edge_end = st.sidebar.text_input("ID del nodo final de la arista")
-    edge_weight = st.sidebar.number_input("Peso de la arista", min_value=0)
+    edge_weight = st.sidebar.text_input("Peso de la arista")
     add_edge_button = st.sidebar.button("Agregar arista")
 
     if 'nodes' not in st.session_state:
@@ -97,39 +102,64 @@ def nuevo_grafo():
 
     if add_node_button:
         st.session_state['nodes'].append(
-            Node(id=node_id, label=node_label, color=node_color, font={"color":"white"}))
+            Node(id=node_id, label=node_label, color=node_color, font={"color": "white"}))
 
     if add_edge_button:
         node_ids = [node.id for node in st.session_state['nodes']]
         if edge_start in node_ids and edge_end in node_ids:
             st.session_state['edges'].append(
-                Edge(source=edge_start, target=edge_end))
+                Edge(source=edge_start, target=edge_end, label=edge_weight))
         else:
             st.error(
                 "Los nodos de inicio y fin deben existir antes de agregar una arista.")
+    selected_node_id = st.sidebar.selectbox("Selecciona un nodo para editar", options=[
+                                            node.id for node in st.session_state['nodes']])
+    new_node_id = st.sidebar.text_input("Nuevo ID del nodo")
+    new_node_label = st.sidebar.text_input("Nueva etiqueta del nodo")
+    new_node_color = st.sidebar.color_picker("Nuevo color del nodo")
+    edit_node_button = st.sidebar.button("Editar nodo")
 
-    config = Config(width=500, height=500, directed=False,
+    if edit_node_button:
+        for node in st.session_state['nodes']:
+            if node.id == selected_node_id:
+                st.session_state['id_map'][selected_node_id] = new_node_id
+                node.id = new_node_id
+                node.label = new_node_label
+                node.color = new_node_color
+
+        for edge in st.session_state['edges']:
+            if edge.source == selected_node_id:
+                edge.source = st.session_state['id_map'][selected_node_id]
+            if edge.to == selected_node_id:
+                edge.to = st.session_state['id_map'][selected_node_id]
+
+    config = Config(width=900, height=900, directed=False,
                     nodeHighlightBehavior=True)
     agraph(nodes=st.session_state['nodes'],
            edges=st.session_state['edges'], config=config)
 
 
 def abrir_grafo():
-    uploaded_file = st.file_uploader(
-        "Elige un archivo .json", type="json")
+    uploaded_file = st.file_uploader("Elige un archivo .json", type="json")
     if uploaded_file is not None:
         file_details = {"FileName": uploaded_file.name,
-                        "FileType": uploaded_file.type, "FileSize": uploaded_file.size}
+                        "FileType": uploaded_file.type}
         st.write(file_details)
         json_data = json.load(uploaded_file)
-        G = nx.Graph()
+
+        nodes = []
+        edges = []
+
         for node in json_data['graph'][0]['data']:
-            G.add_node(node['id'], label=node['label'], type=node['type'],
-                       radius=node['radius'], coordenates=node['coordenates'])
+            nodes.append(
+                Node(id=node['id'], label=node['label'], color="green", font={"color": "white"}))
             for linked_node in node['linkedTo']:
-                G.add_edge(node['id'], linked_node['nodeId'],
-                           weight=linked_node['weight'])
-        draw_graph(G)
+                edges.append(Edge(source=node['id'], target=linked_node['nodeId'], label=str(
+                    linked_node['weight'])))
+
+        config = Config(width=500, height=500, directed=False,
+                        nodeHighlightBehavior=True)
+        agraph(nodes=nodes, edges=edges, config=config)
 
 
 if __name__ == "__main__":
