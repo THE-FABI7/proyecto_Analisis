@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 from streamlit_agraph import agraph, Node, Edge, Config
 
 
+
 def main():
+
     navbar_options = ["Archivo", "Editar", "Ejecutar",
                       "Herramientas", "Ventana", "Ayuda"]
     archivo_options = ["nuevo grafo", "Abrir", "Cerrar", "Guardar",
@@ -14,6 +16,9 @@ def main():
     ejecutar_options = ["procesos"]
     ventana_options = ["Gráfica", "Tabla"]
     ayuda_options = ["Ayuda", "Acerca de Grafos"]
+    # Usa un archivo de imagen y muéstralo en el encabezado de la barra lateral usando st.image.
+    st.sidebar.markdown(
+        f'<img src="https://www.ucaldas.edu.co/portal/wp-content/uploads/2020/05/monitorias-1.jpg" width="100" class="my-sidebar-image">', unsafe_allow_html=True)
 
     navbar_selection = st.sidebar.selectbox("Menú", navbar_options)
 
@@ -125,12 +130,6 @@ def nuevo_grafo():
                 node.id = new_node_id
                 node.label = new_node_label
                 node.color = new_node_color
-
-        for edge in st.session_state['edges']:
-            if edge.source == selected_node_id:
-                edge.source = st.session_state['id_map'][selected_node_id]
-            if edge.to == selected_node_id:
-                edge.to = st.session_state['id_map'][selected_node_id]
 
     config = Config(width=900, height=900, directed=False,
                     nodeHighlightBehavior=True)
