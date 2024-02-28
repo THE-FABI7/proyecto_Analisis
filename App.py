@@ -1,9 +1,9 @@
+import os
 import streamlit as st
 import json
 import networkx as nx
 import matplotlib.pyplot as plt
 from streamlit_agraph import agraph, Node, Edge, Config
-
 
 
 def main():
@@ -33,8 +33,7 @@ def main():
             abrir_grafo()
 
         elif archivo_selection == "Cerrar":
-            # cierra la aplicacion
-            st.write("Has seleccionado la Sub opción 3")
+            os._exit(0)
 
         if archivo_selection == "Guardar":
             st.write("Has seleccionado la Sub opción 3")
