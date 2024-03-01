@@ -39,6 +39,8 @@ def main():
             st.write("Has seleccionado la Sub opción 3")
         if archivo_selection == "Guardar como":
             st.write("Has seleccionado la Sub opción 3")
+        if archivo_selection == "Exportar datos":
+            st.write("Has seleccionado la opción de exportación a Excel")
 
     elif navbar_selection == "Editar":
         archivo_selection = st.sidebar.selectbox("Opciones", editar_options)
@@ -70,7 +72,6 @@ def main():
             st.write("Has seleccionado la Sub opción 1")
         if archivo_selection == "Acerca de Grafos":
             acerca_de_grafos()
-            
 
 
 def draw_graph(G):
@@ -93,6 +94,7 @@ def nuevo_grafo():
     edge_start = st.sidebar.text_input("ID del nodo de inicio de la arista")
     edge_end = st.sidebar.text_input("ID del nodo final de la arista")
     edge_weight = st.sidebar.text_input("Peso de la arista")
+    edge_color = st.sidebar.color_picker("Color de la arista")
     add_edge_button = st.sidebar.button("Agregar arista")
 
     if 'nodes' not in st.session_state:
@@ -111,7 +113,7 @@ def nuevo_grafo():
         node_ids = [node.id for node in st.session_state['nodes']]
         if edge_start in node_ids and edge_end in node_ids:
             st.session_state['edges'].append(Edge(
-                source=st.session_state['id_map'][edge_start], target=st.session_state['id_map'][edge_end], label=edge_weight))
+                source=st.session_state['id_map'][edge_start], target=st.session_state['id_map'][edge_end], label=edge_weight, color=edge_color))
         else:
             st.error(
                 "Los nodos de inicio y fin deben existir antes de agregar una arista.")
