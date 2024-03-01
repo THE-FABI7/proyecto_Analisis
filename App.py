@@ -69,7 +69,8 @@ def main():
         if archivo_selection == "Ayuda":
             st.write("Has seleccionado la Sub opción 1")
         if archivo_selection == "Acerca de Grafos":
-            st.write("Has seleccionado la Sub opción 1")
+            acerca_de_grafos()
+            
 
 
 def draw_graph(G):
@@ -157,6 +158,13 @@ def abrir_grafo():
         config = Config(width=500, height=500, directed=False,
                         nodeHighlightBehavior=True)
         agraph(nodes=nodes, edges=edges, config=config)
+
+
+def acerca_de_grafos():
+    st.write("acerca_de_grafos")
+    st.write("Grafos es una aplicación que permite crear, editar y visualizar grafos. Esta aplicación fue desarrollada por estudiantes de la Universidad de Caldas como proyecto final para la asignatura de Analisis y Diseño de algoritmos.")
+    st.write("Integrantes:")
+    st.write("Fabian Alberto Guancha vera")
 
 
 if __name__ == "__main__":
