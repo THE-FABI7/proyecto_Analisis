@@ -41,6 +41,8 @@ def main():
             st.write("Has seleccionado la Sub opción 3")
         if archivo_selection == "Exportar datos":
             st.write("Has seleccionado la opción de exportación a Excel")
+        if archivo_selection == "Importar datos":
+            importar_datos()
 
     elif navbar_selection == "Editar":
         archivo_selection = st.sidebar.selectbox("Opciones", editar_options)
@@ -156,6 +158,36 @@ def abrir_grafo():
             for linked_node in node['linkedTo']:
                 edges.append(Edge(source=node['id'], target=linked_node['nodeId'], label=str(
                     linked_node['weight'])))
+
+        config = Config(width=500, height=500, directed=False,
+                        nodeHighlightBehavior=True)
+        agraph(nodes=nodes, edges=edges, config=config)
+
+
+def importar_datos():
+    uploaded_file = st.file_uploader("Elige un archivo .txt", type="txt")
+    if uploaded_file is not None:
+        file_details = {"FileName": uploaded_file.name,
+                        "FileType": uploaded_file.type}
+        st.write(file_details)
+
+        # Assuming the txt file has lines in the format: id,label,linkedTo
+        nodes = []
+        edges = []
+
+        for line in uploaded_file:
+            # Decode the binary data to text
+            decoded_line = line.decode('utf-8')
+            node_data = decoded_line.strip().split(',')
+            nodes.append(
+                Node(id=node_data[0], label=node_data[1], color="green", font={"color": "white"}))
+            # Assuming linked nodes are separated by semicolons
+            linked_nodes = node_data[2].split(';')
+            for linked_node in linked_nodes:
+                # Assuming linked node format is nodeId:weight
+                linked_node_data = linked_node.split(':')
+                edges.append(Edge(source=node_data[0], target=linked_node_data[0], label=str(
+                    linked_node_data[1])))
 
         config = Config(width=500, height=500, directed=False,
                         nodeHighlightBehavior=True)
