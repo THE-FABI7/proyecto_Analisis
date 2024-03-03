@@ -212,34 +212,59 @@ def nuevo_grafo_aleatorio():
     num_nodes = st.number_input('Number of nodes', min_value=1, value=5)
     num_edges = st.number_input('Number of edges', min_value=1, value=5)
 
-    # Create an empty graph
-    G = nx.Graph()
+    # Add a button to generate a new random graph
+    if st.button('Generate new random graph'):
+        # Create an empty graph
+        G = nx.Graph()
 
-    # Add nodes
-    for i in range(num_nodes):
-        G.add_node(i, label=f"Node {i}")
+        # Add nodes
+        for i in range(num_nodes):
+            G.add_node(i, label=f"Node {i}")
 
-    # Add edges
-    while G.number_of_edges() < num_edges:
-        # Randomly select two nodes
-        node1 = random.choice(list(G.nodes))
-        node2 = random.choice(list(G.nodes))
+        # Add edges
+        while G.number_of_edges() < num_edges:
+            # Randomly select two nodes
+            node1 = random.choice(list(G.nodes))
+            node2 = random.choice(list(G.nodes))
+            
+            # Add an edge between the two nodes
+            if node1 != node2 and not G.has_edge(node1, node2):
+                weight = random.randint(1, 10)  # Random weight between 1 and 10
+                G.add_edge(node1, node2, weight=weight)
 
-        # Add an edge between the two nodes
-        if node1 != node2 and not G.has_edge(node1, node2):
-            weight = random.randint(1, 10)  # Random weight between 1 and 10
-            G.add_edge(node1, node2, weight=weight)
+        # Convert the graph into a list of nodes and edges for streamlit_agraph
+        nodes = [Node(str(i), label=G.nodes[i]['label'], color="green", font={"color": "white"}) for i in G.nodes]
+        edges = [Edge(str(edge[0]), str(edge[1]), label=str(G.edges[edge]['weight'])) for edge in G.edges]
 
-    # Convert the graph into a list of nodes and edges for streamlit_agraph
-    nodes = [Node(str(i), label=G.nodes[i]['label']) for i in G.nodes]
-    edges = [Edge(str(edge[0]), str(edge[1]), label=str(
-        G.edges[edge]['weight'])) for edge in G.edges]
+        # Create a config object
+        config = Config(width=1000, height=500, directed=False, nodeHighlightBehavior=True, highlightColor="#F7A7A6")
 
-    # Create a config object
-    config = Config(width=700, height=700, directed=False)
+        # Draw the graph
+        return agraph(nodes=nodes, edges=edges, config=config)
 
-    # Draw the graph
-    return agraph(nodes=nodes, edges=edges, config=config)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
