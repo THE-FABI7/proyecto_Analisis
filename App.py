@@ -4,6 +4,7 @@ import json
 import networkx as nx
 import matplotlib.pyplot as plt
 from streamlit_agraph import agraph, Node, Edge, Config
+import random
 
 
 def main():
@@ -25,8 +26,13 @@ def main():
     if navbar_selection == "Archivo":
         archivo_selection = st.sidebar.selectbox("Opciones", archivo_options)
         if archivo_selection == "nuevo grafo":
-
-            nuevo_grafo()
+            tipo_grafo_options = ["personalizado", "Aleatorio"]
+            tipo_grafo = st.sidebar.selectbox(
+                "Tipo de grafo", tipo_grafo_options)
+            if tipo_grafo == "personalizado":
+                nuevo_grafo_personalizado()
+            else:
+                nuevo_grafo_aleatorio()
 
         if archivo_selection == "Abrir":
 
@@ -86,7 +92,7 @@ def draw_graph(G, node_color='yellow'):
     st.pyplot()
 
 
-def nuevo_grafo():
+def nuevo_grafo_personalizado():
     st.sidebar.title("Crear nuevo grafo")
     node_id = st.sidebar.text_input("ID del nodo")
     node_label = st.sidebar.text_input("Etiqueta del nodo")
@@ -199,6 +205,41 @@ def acerca_de_grafos():
     st.write("Grafos es una aplicación que permite crear, editar y visualizar grafos. Esta aplicación fue desarrollada por estudiantes de la Universidad de Caldas como proyecto final para la asignatura de Analisis y Diseño de algoritmos.")
     st.write("Integrantes:")
     st.write("Fabian Alberto Guancha vera")
+
+
+def nuevo_grafo_aleatorio():
+    # Ask the user for the number of nodes and edges
+    num_nodes = st.number_input('Number of nodes', min_value=1, value=5)
+    num_edges = st.number_input('Number of edges', min_value=1, value=5)
+
+    # Create an empty graph
+    G = nx.Graph()
+
+    # Add nodes
+    for i in range(num_nodes):
+        G.add_node(i, label=f"Node {i}")
+
+    # Add edges
+    while G.number_of_edges() < num_edges:
+        # Randomly select two nodes
+        node1 = random.choice(list(G.nodes))
+        node2 = random.choice(list(G.nodes))
+
+        # Add an edge between the two nodes
+        if node1 != node2 and not G.has_edge(node1, node2):
+            weight = random.randint(1, 10)  # Random weight between 1 and 10
+            G.add_edge(node1, node2, weight=weight)
+
+    # Convert the graph into a list of nodes and edges for streamlit_agraph
+    nodes = [Node(str(i), label=G.nodes[i]['label']) for i in G.nodes]
+    edges = [Edge(str(edge[0]), str(edge[1]), label=str(
+        G.edges[edge]['weight'])) for edge in G.edges]
+
+    # Create a config object
+    config = Config(width=700, height=700, directed=False)
+
+    # Draw the graph
+    return agraph(nodes=nodes, edges=edges, config=config)
 
 
 if __name__ == "__main__":
