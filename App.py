@@ -1,3 +1,4 @@
+from streamlit_agraph import Node, Edge
 import os
 import streamlit as st
 import json
@@ -42,7 +43,8 @@ def main():
             os._exit(0)
 
         if archivo_selection == "Guardar":
-            st.write("Has seleccionado la Sub opción 3")
+            guardar_grafo_actual(
+                st.session_state['nodes'], st.session_state['edges'])
         if archivo_selection == "Guardar como":
             st.write("Has seleccionado la Sub opción 3")
         if archivo_selection == "Exportar datos":
@@ -212,6 +214,12 @@ def nuevo_grafo_aleatorio():
     num_nodes = st.number_input('Number of nodes', min_value=1, value=5)
     num_edges = st.number_input('Number of edges', min_value=1, value=5)
 
+    # Initialize session state if not already initialized
+    if 'nodes' not in st.session_state:
+        st.session_state['nodes'] = []
+    if 'edges' not in st.session_state:
+        st.session_state['edges'] = []
+
     # Add a button to generate a new random graph
     if st.button('Generate new random graph'):
         # Create an empty graph
@@ -226,45 +234,62 @@ def nuevo_grafo_aleatorio():
             # Randomly select two nodes
             node1 = random.choice(list(G.nodes))
             node2 = random.choice(list(G.nodes))
-            
+
             # Add an edge between the two nodes
             if node1 != node2 and not G.has_edge(node1, node2):
-                weight = random.randint(1, 10)  # Random weight between 1 and 10
+                # Random weight between 1 and 10
+                weight = random.randint(1, 10)
                 G.add_edge(node1, node2, weight=weight)
 
         # Convert the graph into a list of nodes and edges for streamlit_agraph
-        nodes = [Node(str(i), label=G.nodes[i]['label'], color="green", font={"color": "white"}) for i in G.nodes]
-        edges = [Edge(str(edge[0]), str(edge[1]), label=str(G.edges[edge]['weight'])) for edge in G.edges]
+        nodes = [Node(str(i), label=G.nodes[i]['label'], color="green", font={
+                      "color": "white"}) for i in G.nodes]
+        edges = [Edge(str(edge[0]), str(edge[1]), label=str(
+            G.edges[edge]['weight'])) for edge in G.edges]
+
+        # Update session state with the new nodes and edges
+        st.session_state['nodes'] = nodes
+        st.session_state['edges'] = edges
 
         # Create a config object
-        config = Config(width=1000, height=500, directed=False, nodeHighlightBehavior=True, highlightColor="#F7A7A6")
+        config = Config(width=1000, height=500, directed=False,
+                        nodeHighlightBehavior=True, highlightColor="#F7A7A6")
 
         # Draw the graph
         return agraph(nodes=nodes, edges=edges, config=config)
 
 
+def guardar_grafo_actual(nodes, edges):
+        # Crear un diccionario con la información del grafo
+        grafo_data = {
+            "nodes": [node.to_dict() for node in nodes],
+            "edges": [edge.to_dict() for edge in edges]
+        }
 
+        # Imprimir grafo_data para depuración
+        st.write("Datos del grafo:")
+        st.write(grafo_data)
 
+        # Obtener la ubicación y el nombre del archivo del usuario
+        nombre_archivo = st.text_input(
+            "Nombre del archivo para guardar el grafo", value="grafo.json")
 
+        # Carpeta donde se guardarán los grafos
+        carpeta_guardado = "grafosExample"
 
+        # Crear la carpeta si no existe
+        if not os.path.exists(carpeta_guardado):
+            os.makedirs(carpeta_guardado)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        if st.button("Guardar grafo"):
+        # Guardar el grafo en un archivo JSON en la carpeta
+            ruta_archivo = os.path.join(carpeta_guardado, nombre_archivo)
+            try:
+                with open(ruta_archivo, "w") as f:
+                    json.dump(grafo_data, f)
+                st.success(f"Grafo guardado correctamente en {ruta_archivo}")
+            except Exception as e:
+                st.error(f"Error al guardar el grafo: {e}")
 
 
 if __name__ == "__main__":
