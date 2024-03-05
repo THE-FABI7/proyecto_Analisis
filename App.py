@@ -39,7 +39,7 @@ def main():
 
             abrir_grafo()
 
-        elif archivo_selection == "Cerrar":
+        elif archivo_selection == "Salir":
             os._exit(0)
 
         if archivo_selection == "Guardar":
@@ -84,6 +84,7 @@ def main():
             acerca_de_grafos()
 
 
+# dibuja el grafo dependiendo los valores que el usuario ingresa
 def draw_graph(G):
     nx.draw(G, with_labels=True)
     st.pyplot()
@@ -93,7 +94,8 @@ def draw_graph(G, node_color='yellow'):
     nx.draw(G, with_labels=True, node_color=node_color)
     st.pyplot()
 
-
+# TODO: hay un problema a el momento de actulizar un nodo, se desaparecen las aristas relacionadas
+# Metodo para crear un grafo personalizado
 def nuevo_grafo_personalizado():
     st.sidebar.title("Crear nuevo grafo")
     node_id = st.sidebar.text_input("ID del nodo")
@@ -148,7 +150,7 @@ def nuevo_grafo_personalizado():
     agraph(nodes=st.session_state['nodes'],
            edges=st.session_state['edges'], config=config)
 
-
+# Metoddo para abrir el grafo
 def abrir_grafo():
     uploaded_file = st.file_uploader("Elige un archivo .json", type="json")
     if uploaded_file is not None:
@@ -167,7 +169,7 @@ def abrir_grafo():
                 edges.append(Edge(source=node['id'], target=linked_node['nodeId'], label=str(
                     linked_node['weight'])))
 
-        config = Config(width=500, height=500, directed=False,
+        config = Config(width=1000, height=500, directed=False,
                         nodeHighlightBehavior=True)
         agraph(nodes=nodes, edges=edges, config=config)
 
@@ -197,18 +199,18 @@ def importar_datos():
                 edges.append(Edge(source=node_data[0], target=linked_node_data[0], label=str(
                     linked_node_data[1])))
 
-        config = Config(width=500, height=500, directed=False,
+        config = Config(width=1000, height=500, directed=False,
                         nodeHighlightBehavior=True)
         agraph(nodes=nodes, edges=edges, config=config)
 
-
+# Metdo par amostrar lo que se va a mostrar en acerca de grafos
 def acerca_de_grafos():
     st.write("acerca_de_grafos")
     st.write("Grafos es una aplicación que permite crear, editar y visualizar grafos. Esta aplicación fue desarrollada por estudiantes de la Universidad de Caldas como proyecto final para la asignatura de Analisis y Diseño de algoritmos.")
     st.write("Integrantes:")
     st.write("Fabian Alberto Guancha vera")
 
-
+# TODO:hay un problema a el momento de dar click sobre un nodo, se desaparece y renderiza un nuevo grafo
 def nuevo_grafo_aleatorio():
     # Ask the user for the number of nodes and edges
     num_nodes = st.number_input('Number of nodes', min_value=1, value=5)
@@ -252,45 +254,48 @@ def nuevo_grafo_aleatorio():
         st.session_state['edges'] = edges
 
         # Create a config object
-        config = Config(width=1000, height=500, directed=False,
+        config = Config(width=2000, height=500, directed=False,
                         nodeHighlightBehavior=True, highlightColor="#F7A7A6")
 
         # Draw the graph
         return agraph(nodes=nodes, edges=edges, config=config)
 
+# Metodo para guardar el grafoKC
+
 
 def guardar_grafo_actual(nodes, edges):
-        # Crear un diccionario con la información del grafo
-        grafo_data = {
-            "nodes": [node.to_dict() for node in nodes],
-            "edges": [edge.to_dict() for edge in edges]
-        }
+    # Crear un diccionario con la información del grafo
+    grafo_data = {
+        "nodes": [node.to_dict() for node in nodes],
+        "edges": [edge.to_dict() for edge in edges]
+    }
 
-        # Imprimir grafo_data para depuración
-        st.write("Datos del grafo:")
-        st.write(grafo_data)
+    # Imprimir grafo_data para depuración
+    st.write("Datos del grafo:")
+    st.write(grafo_data)
 
-        # Obtener la ubicación y el nombre del archivo del usuario
-        nombre_archivo = st.text_input(
-            "Nombre del archivo para guardar el grafo", value="grafo.json")
+    # Obtener la ubicación y el nombre del archivo del usuario
+    nombre_archivo = st.text_input(
+        "Nombre del archivo para guardar el grafo", value="grafo.json")
 
-        # Carpeta donde se guardarán los grafos
-        carpeta_guardado = "grafosExample"
+    # Carpeta donde se guardarán los grafos
+    carpeta_guardado = "grafosExample"
 
-        # Crear la carpeta si no existe
-        if not os.path.exists(carpeta_guardado):
-            os.makedirs(carpeta_guardado)
+    # Crear la carpeta si no existe
+    if not os.path.exists(carpeta_guardado):
+        os.makedirs(carpeta_guardado)
 
-        if st.button("Guardar grafo"):
+    if st.button("Guardar grafo"):
         # Guardar el grafo en un archivo JSON en la carpeta
-            ruta_archivo = os.path.join(carpeta_guardado, nombre_archivo)
-            try:
-                with open(ruta_archivo, "w") as f:
-                    json.dump(grafo_data, f)
-                st.success(f"Grafo guardado correctamente en {ruta_archivo}")
-            except Exception as e:
-                st.error(f"Error al guardar el grafo: {e}")
+        ruta_archivo = os.path.join(carpeta_guardado, nombre_archivo)
+        try:
+            with open(ruta_archivo, "w") as f:
+                json.dump(grafo_data, f)
+            st.success(f"Grafo guardado correctamente en {ruta_archivo}")
+        except Exception as e:
+            st.error(f"Error al guardar el grafo: {e}")
 
 
 if __name__ == "__main__":
     main()
+
