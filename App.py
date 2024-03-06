@@ -96,6 +96,8 @@ def draw_graph(G, node_color='yellow'):
 
 # TODO: hay un problema a el momento de actulizar un nodo, se desaparecen las aristas relacionadas
 # Metodo para crear un grafo personalizado
+
+
 def nuevo_grafo_personalizado():
     st.sidebar.title("Crear nuevo grafo")
     node_id = st.sidebar.text_input("ID del nodo")
@@ -145,12 +147,24 @@ def nuevo_grafo_personalizado():
                 node.label = new_node_label
                 node.color = new_node_color
 
+    selected_node_id = st.sidebar.selectbox("Selecciona un nodo para eliminar", options=[
+        node.id for node in st.session_state['nodes']])
+    delete_node_button = st.sidebar.button("Eliminar nodo")
+    if delete_node_button:
+        st.session_state['nodes'] = [
+            node for node in st.session_state['nodes'] if node.id != selected_node_id]
+        st.session_state['edges'] = [edge for edge in st.session_state['edges']
+                                     if edge.source != selected_node_id and edge.target != selected_node_id]
+        st.session_state['id_map'].pop(selected_node_id, None)
+
     config = Config(width=900, height=900, directed=False,
                     nodeHighlightBehavior=True)
     agraph(nodes=st.session_state['nodes'],
            edges=st.session_state['edges'], config=config)
 
 # Metoddo para abrir el grafo
+
+
 def abrir_grafo():
     uploaded_file = st.file_uploader("Elige un archivo .json", type="json")
     if uploaded_file is not None:
@@ -204,6 +218,8 @@ def importar_datos():
         agraph(nodes=nodes, edges=edges, config=config)
 
 # Metdo par amostrar lo que se va a mostrar en acerca de grafos
+
+
 def acerca_de_grafos():
     st.write("acerca_de_grafos")
     st.write("Grafos es una aplicación que permite crear, editar y visualizar grafos. Esta aplicación fue desarrollada por estudiantes de la Universidad de Caldas como proyecto final para la asignatura de Analisis y Diseño de algoritmos.")
@@ -211,6 +227,8 @@ def acerca_de_grafos():
     st.write("Fabian Alberto Guancha vera")
 
 # TODO:hay un problema a el momento de dar click sobre un nodo, se desaparece y renderiza un nuevo grafo
+
+
 def nuevo_grafo_aleatorio():
     # Ask the user for the number of nodes and edges
     num_nodes = st.number_input('Number of nodes', min_value=1, value=5)
@@ -298,4 +316,3 @@ def guardar_grafo_actual(nodes, edges):
 
 if __name__ == "__main__":
     main()
-
