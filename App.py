@@ -122,7 +122,10 @@ def nuevo_grafo_personalizado():
         st.session_state['id_map'] = {}
 
     if add_node_button:
-
+        #condicion para que no se agreguen nodos sin id y sin etiqueta
+        if node_id == "" or node_label == "":
+            st.error("El ID y la etiqueta del nodo son obligatorios.")
+            return None
         st.session_state['nodes'].append(
             Node(id=node_id, label=node_label, color=node_color, font={"color": "white"}))
         st.session_state['id_map'][node_id] = node_id
