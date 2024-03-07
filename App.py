@@ -9,6 +9,9 @@ import random
 
 
 def main():
+    # Carga los estilos CSS directamente en el archivo Python
+    with open('styles.css', 'r') as css:
+        st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
 
     navbar_options = ["Archivo", "Editar", "Ejecutar",
                       "Herramientas", "Ventana", "Ayuda"]
@@ -20,7 +23,7 @@ def main():
     ayuda_options = ["Ayuda", "Acerca de Grafos"]
     # Usa un archivo de imagen y muéstralo en el encabezado de la barra lateral usando st.image.
     st.sidebar.markdown(
-        f'<img src="https://www.ucaldas.edu.co/portal/wp-content/uploads/2020/05/monitorias-1.jpg" width="100" class="my-sidebar-image">', unsafe_allow_html=True)
+        f'<img src="https://www.ucaldas.edu.co/portal/wp-content/uploads/2020/05/monitorias-1.jpg" width="150" class="my-sidebar-image">', unsafe_allow_html=True)
 
     navbar_selection = st.sidebar.selectbox("Menú", navbar_options)
 
@@ -153,8 +156,6 @@ def nuevo_grafo_personalizado():
     if delete_node_button:
         st.session_state['nodes'] = [
             node for node in st.session_state['nodes'] if node.id != selected_node_id]
-        st.session_state['edges'] = [edge for edge in st.session_state['edges']
-                                     if edge.source != selected_node_id and edge.target != selected_node_id]
         st.session_state['id_map'].pop(selected_node_id, None)
 
     config = Config(width=900, height=900, directed=False,

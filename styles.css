@@ -1,0 +1,24 @@
+p {
+  font-size: 1.2em; /* Tamaño de fuente */
+  font-weight: bold; /* Peso de la fuente */
+  color: #333; /* Color del texto */
+  margin-bottom: 10px; /* Espacio debajo del subtitulo */
+}
+
+/* Estilo para subtitulos */
+.st-emotion-cache-cnbvxy {
+  font-family: "Source Sans Pro", sans-serif; /* Fuente */
+  font-size: 1.2em; /* Tamaño de fuente */
+  font-weight: bold; /* Peso de la fuente */
+  color: #333; /* Color del texto */
+  margin-bottom: 10px; /* Espacio debajo del subtitulo */
+}
+
+/* Estilo para imágenes y SVG */
+img,
+svg {
+  max-width: 100%; /* Asegura que la imagen no sea más ancha que su contenedor */
+  height: auto; /* Permite que la imagen se ajuste proporcionalmente */
+  display: block; /* Evita espacios vacíos debajo de las imágenes */
+  margin: 0 auto; /* Centra la imagen horizontalmente */
+}
