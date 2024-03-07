@@ -122,6 +122,7 @@ def nuevo_grafo_personalizado():
         st.session_state['id_map'] = {}
 
     if add_node_button:
+
         st.session_state['nodes'].append(
             Node(id=node_id, label=node_label, color=node_color, font={"color": "white"}))
         st.session_state['id_map'][node_id] = node_id

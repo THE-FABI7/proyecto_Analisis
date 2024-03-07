@@ -22,3 +22,60 @@ svg {
   display: block; /* Evita espacios vacíos debajo de las imágenes */
   margin: 0 auto; /* Centra la imagen horizontalmente */
 }
+
+.st-emotion-cache-19rxjzo {
+  color: #fff; /* Cambio el color del texto para que resalte sobre el fondo */
+  background-color: #3DAD3B; /* Utilizo un tono más claro y sólido para el fondo */
+  border: 1px solid rgba(49, 54, 56, 0.2); /* Simplifico la propiedad border */
+  border-radius: 4px; /* Agrego un borde redondeado para suavizar los bordes */
+  padding: 10px 20px; /* Aumento un poco el espacio interior para hacerlo más amigable */
+  cursor: pointer; /* Cambio el cursor para indicar que es interactivo */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Agrego una transición suave al cambio de color */
+}
+
+
+.st-emotion-cache-16txtl3 h1 {
+  font-size: 1.2rem; /* Reduzco un poco el tamaño de la fuente para que no sea tan dominante */
+  font-weight: 500; /* Ajusto el peso de la fuente para que sea más equilibrado */
+  color: #333; /* Cambio el color del texto para que sea más legible y suave */
+  margin-bottom: 10px; /* Agrego un poco de espacio inferior para separar el subtítulo de otros elementos */
+  text-transform: uppercase; /* Convierto el texto a mayúsculas para un estilo más elegante */
+}
+
+
+.st-emotion-cache-hc3laj {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500; /* Aumento el peso de la fuente para que resalte más */
+  padding: 0.5rem 1rem; /* Aumento ligeramente el padding para hacer el botón más grande */
+  border-radius: 8px; /* Aumento el radio del borde para suavizar los bordes */
+  min-height: 40px; /* Ajusto ligeramente la altura mínima */
+  margin: 0; /* Elimino el margen para un mejor ajuste */
+  line-height: 1.5; /* Aumento ligeramente la altura de línea para mejorar la legibilidad */
+  color: #fff; /* Cambio el color del texto para que sea más visible sobre el fondo oscuro */
+  width: auto;
+  user-select: none;
+  background-color: #2b2c36; /* Utilizo un tono más oscuro para el fondo */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Ajusto el color del borde para que contraste con el fondo */
+  cursor: pointer; /* Cambio el cursor para indicar que es interactivo */
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; /* Agrego una transición suave al cambio de color */
+}
+
+
+.st-emotion-cache-hc3laj {
+  color: #fff; /* Cambio el color del texto para que resalte sobre el fondo */
+  background-color: #4CAF50; /* Utilizo un tono verde agradable para el fondo */
+  border-color: #4CAF50; /* Utilizo el mismo color verde para el borde */
+  border-width: 1px; /* Establezco el ancho del borde */
+  border-style: solid; /* Establezco el estilo del borde como sólido */
+  border-radius: 4px; /* Agrego un borde redondeado para suavizar los bordes */
+  padding: 10px 20px; /* Aumento el espacio interior para hacerlo más amigable */
+  cursor: pointer; /* Cambio el cursor para indicar que es interactivo */
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; /* Agrego una transición suave al cambio de color */
+}
+
+.st-emotion-cache-hc3laj:hover {
+  background-color: #64D368; /* Cambio el color de fondo al pasar el cursor sobre el botón */
+  border-color: #64D368; /* Cambio el color del borde al pasar el cursor sobre el botón */
+}
