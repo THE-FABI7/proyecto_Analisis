@@ -113,6 +113,10 @@ def nuevo_grafo_personalizado():
     edge_weight = st.sidebar.text_input("Peso de la arista")
     edge_color = st.sidebar.color_picker("Color de la arista")
     add_edge_button = st.sidebar.button("Agregar arista")
+    
+    #reiniciar el estado de los nodos y las aristas
+    st.session_state['nodes'] = []
+    st.session_state['edges'] = []
 
     if 'nodes' not in st.session_state:
         st.session_state['nodes'] = []
@@ -122,7 +126,7 @@ def nuevo_grafo_personalizado():
         st.session_state['id_map'] = {}
 
     if add_node_button:
-        #condicion para que no se agreguen nodos sin id y sin etiqueta
+        # condicion para que no se agreguen nodos sin id y sin etiqueta
         if node_id == "" or node_label == "":
             st.error("El ID y la etiqueta del nodo son obligatorios.")
             return None
