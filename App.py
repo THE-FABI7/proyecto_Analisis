@@ -169,6 +169,20 @@ def nuevo_grafo_personalizado():
             node for node in st.session_state['personalizado_nodes'] if node.id != selected_node_id]
         st.session_state['personalizado_id_map'].pop(selected_node_id, None)
 
+    actual_source = st.sidebar.selectbox("Seleccione la arista", [(
+        edge.source, edge.to) for edge in st.session_state['personalizado_edges']])
+    actuaal_edge = next(
+        (edge for edge in st.session_state['personalizado_edges']
+         if edge.source == actual_source[0] and edge.to == actual_source[1]), None,
+
+    )
+    delete_arista_button = st.sidebar.button("Eliminar arista")
+    if delete_arista_button:
+       st.session_state["personalizado_edges"].remove(actuaal_edge)
+       st.session_state["last_action"] = "Delete edge"
+       
+       
+
     config = Config(width=900, height=900, directed=False,
                     nodeHighlightBehavior=True)
     agraph(nodes=st.session_state['personalizado_nodes'],
