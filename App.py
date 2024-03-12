@@ -113,63 +113,66 @@ def nuevo_grafo_personalizado():
     edge_weight = st.sidebar.text_input("Peso de la arista")
     edge_color = st.sidebar.color_picker("Color de la arista")
     add_edge_button = st.sidebar.button("Agregar arista")
-    
-    #reiniciar el estado de los nodos y las aristas
-    st.session_state['nodes'] = []
-    st.session_state['edges'] = []
 
-    if 'nodes' not in st.session_state:
-        st.session_state['nodes'] = []
-    if 'edges' not in st.session_state:
-        st.session_state['edges'] = []
-    if 'id_map' not in st.session_state:
-        st.session_state['id_map'] = {}
+    # El código verifica si la clave 'nodos' no está presente en el diccionario `st.session_state` en
+    # Python. Si la clave 'nodos' no está presente, el código ejecutará el bloque de código indicado
+    # por `
+
+    if 'personalizado_nodes' not in st.session_state:
+        st.session_state['personalizado_nodes'] = []
+    if 'personalizado_edges' not in st.session_state:
+        st.session_state['personalizado_edges'] = []
+    if 'personalizado_id_map' not in st.session_state:
+        st.session_state['personalizado_id_map'] = {}
 
     if add_node_button:
         # condicion para que no se agreguen nodos sin id y sin etiqueta
         if node_id == "" or node_label == "":
             st.error("El ID y la etiqueta del nodo son obligatorios.")
             return None
-        st.session_state['nodes'].append(
+        st.session_state['personalizado_nodes'].append(
             Node(id=node_id, label=node_label, color=node_color, font={"color": "white"}))
-        st.session_state['id_map'][node_id] = node_id
+        st.session_state['personalizado_id_map'][node_id] = node_id
 
     if add_edge_button:
-        node_ids = [node.id for node in st.session_state['nodes']]
+        node_ids = [node.id for node in st.session_state['personalizado_nodes']]
         if edge_start in node_ids and edge_end in node_ids:
-            st.session_state['edges'].append(Edge(
-                source=st.session_state['id_map'][edge_start], target=st.session_state['id_map'][edge_end], label=edge_weight, color=edge_color))
+            st.session_state['personalizado_edges'].append(Edge(
+                source=st.session_state['personalizado_id_map'][edge_start], target=st.session_state['personalizado_id_map'][edge_end], label=edge_weight, color=edge_color,  width=2.0))
         else:
             st.error(
                 "Los nodos de inicio y fin deben existir antes de agregar una arista.")
 
     selected_node_id = st.sidebar.selectbox("Selecciona un nodo para editar", options=[
-                                            node.id for node in st.session_state['nodes']])
+                                            node.id for node in st.session_state['personalizado_nodes']])
     new_node_id = st.sidebar.text_input("Nuevo ID del nodo")
     new_node_label = st.sidebar.text_input("Nueva etiqueta del nodo")
     new_node_color = st.sidebar.color_picker("Nuevo color del nodo")
     edit_node_button = st.sidebar.button("Editar nodo")
 
     if edit_node_button:
-        for node in st.session_state['nodes']:
+        for node in st.session_state['personalizado_nodes']:
             if node.id == selected_node_id:
-                st.session_state['id_map'][selected_node_id] = new_node_id
-                node.id = new_node_id
-                node.label = new_node_label
-                node.color = new_node_color
+                if new_node_id != "":
+                    st.session_state['personalizado_id_map'][selected_node_id] = new_node_id
+                    node.id = new_node_id
+                if new_node_label != "":
+                    node.label = new_node_label
+                if new_node_color != "":
+                    node.color = new_node_color
 
     selected_node_id = st.sidebar.selectbox("Selecciona un nodo para eliminar", options=[
-        node.id for node in st.session_state['nodes']])
+        node.id for node in st.session_state['personalizado_nodes']])
     delete_node_button = st.sidebar.button("Eliminar nodo")
     if delete_node_button:
-        st.session_state['nodes'] = [
-            node for node in st.session_state['nodes'] if node.id != selected_node_id]
-        st.session_state['id_map'].pop(selected_node_id, None)
+        st.session_state['personalizado_nodes'] = [
+            node for node in st.session_state['personalizado_nodes'] if node.id != selected_node_id]
+        st.session_state['personalizado_id_map'].pop(selected_node_id, None)
 
     config = Config(width=900, height=900, directed=False,
                     nodeHighlightBehavior=True)
-    agraph(nodes=st.session_state['nodes'],
-           edges=st.session_state['edges'], config=config)
+    agraph(nodes=st.session_state['personalizado_nodes'],
+           edges=st.session_state['personalizado_edges'], config=config)
 
 # Metoddo para abrir el grafo
 
