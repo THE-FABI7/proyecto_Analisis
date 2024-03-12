@@ -1,7 +1,7 @@
 p {
   font-size: 1.2em; /* Tamaño de fuente */
   font-weight: bold; /* Peso de la fuente */
-  color: #333; /* Color del texto */
+  color: #f8f5f5; /* Color del texto */
   margin-bottom: 10px; /* Espacio debajo del subtitulo */
 }
 
@@ -10,7 +10,7 @@ p {
   font-family: "Source Sans Pro", sans-serif; /* Fuente */
   font-size: 1.2em; /* Tamaño de fuente */
   font-weight: bold; /* Peso de la fuente */
-  color: #333; /* Color del texto */
+  color: #f7eded; /* Color del texto */
   margin-bottom: 10px; /* Espacio debajo del subtitulo */
 }
 
@@ -25,7 +25,7 @@ svg {
 
 .st-emotion-cache-19rxjzo {
   color: #fff; /* Cambio el color del texto para que resalte sobre el fondo */
-  background-color: #3DAD3B; /* Utilizo un tono más claro y sólido para el fondo */
+  background-color: #3dad3b; /* Utilizo un tono más claro y sólido para el fondo */
   border: 1px solid rgba(49, 54, 56, 0.2); /* Simplifico la propiedad border */
   border-radius: 4px; /* Agrego un borde redondeado para suavizar los bordes */
   padding: 10px 20px; /* Aumento un poco el espacio interior para hacerlo más amigable */
@@ -33,15 +33,13 @@ svg {
   transition: background-color 0.3s ease, color 0.3s ease; /* Agrego una transición suave al cambio de color */
 }
 
-
 .st-emotion-cache-16txtl3 h1 {
   font-size: 1.2rem; /* Reduzco un poco el tamaño de la fuente para que no sea tan dominante */
   font-weight: 500; /* Ajusto el peso de la fuente para que sea más equilibrado */
-  color: #333; /* Cambio el color del texto para que sea más legible y suave */
+  color: #f8f5f5; /* Cambio el color del texto para que sea más legible y suave */
   margin-bottom: 10px; /* Agrego un poco de espacio inferior para separar el subtítulo de otros elementos */
   text-transform: uppercase; /* Convierto el texto a mayúsculas para un estilo más elegante */
 }
-
 
 .st-emotion-cache-hc3laj {
   display: inline-flex;
@@ -59,23 +57,30 @@ svg {
   background-color: #2b2c36; /* Utilizo un tono más oscuro para el fondo */
   border: 1px solid rgba(255, 255, 255, 0.2); /* Ajusto el color del borde para que contraste con el fondo */
   cursor: pointer; /* Cambio el cursor para indicar que es interactivo */
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; /* Agrego una transición suave al cambio de color */
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    color 0.3s ease; /* Agrego una transición suave al cambio de color */
 }
-
 
 .st-emotion-cache-hc3laj {
   color: #fff; /* Cambio el color del texto para que resalte sobre el fondo */
-  background-color: #4CAF50; /* Utilizo un tono verde agradable para el fondo */
-  border-color: #4CAF50; /* Utilizo el mismo color verde para el borde */
+  background-color: #4caf50; /* Utilizo un tono verde agradable para el fondo */
+  border-color: #4caf50; /* Utilizo el mismo color verde para el borde */
   border-width: 1px; /* Establezco el ancho del borde */
   border-style: solid; /* Establezco el estilo del borde como sólido */
   border-radius: 4px; /* Agrego un borde redondeado para suavizar los bordes */
   padding: 10px 20px; /* Aumento el espacio interior para hacerlo más amigable */
   cursor: pointer; /* Cambio el cursor para indicar que es interactivo */
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; /* Agrego una transición suave al cambio de color */
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    color 0.3s ease; /* Agrego una transición suave al cambio de color */
 }
 
 .st-emotion-cache-hc3laj:hover {
-  background-color: #64D368; /* Cambio el color de fondo al pasar el cursor sobre el botón */
-  border-color: #64D368; /* Cambio el color del borde al pasar el cursor sobre el botón */
+  background-color: #64d368; /* Cambio el color de fondo al pasar el cursor sobre el botón */
+  border-color: #64d368; /* Cambio el color del borde al pasar el cursor sobre el botón */
+}
+
+
+.st-emotion-cache-16txtl3 {
+  padding: 6rem 1.5rem;
+  background-color: black;
 }

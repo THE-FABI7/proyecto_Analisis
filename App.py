@@ -174,6 +174,7 @@ def nuevo_grafo_personalizado():
     agraph(nodes=st.session_state['personalizado_nodes'],
            edges=st.session_state['personalizado_edges'], config=config)
 
+
 # Metoddo para abrir el grafo
 
 
