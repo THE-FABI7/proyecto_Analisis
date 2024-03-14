@@ -52,6 +52,7 @@ def main():
             st.write("Has seleccionado la Sub opción 3")
         if archivo_selection == "Exportar datos":
             st.write("Has seleccionado la opción de exportación a Excel")
+            # necesito exportar el grafo generado como imagen creame una funcion para eso
         if archivo_selection == "Importar datos":
             importar_datos()
 
@@ -178,10 +179,8 @@ def nuevo_grafo_personalizado():
     )
     delete_arista_button = st.sidebar.button("Eliminar arista")
     if delete_arista_button:
-       st.session_state["personalizado_edges"].remove(actuaal_edge)
-       st.session_state["last_action"] = "Delete edge"
-       
-       
+        st.session_state["personalizado_edges"].remove(actuaal_edge)
+        st.session_state["last_action"] = "Delete edge"
 
     config = Config(width=900, height=900, directed=False,
                     nodeHighlightBehavior=True)
