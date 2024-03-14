@@ -36,7 +36,16 @@ def main():
             if tipo_grafo == "personalizado":
                 nuevo_grafo_personalizado()
             else:
-                nuevo_grafo_aleatorio()
+                tipo_grafo_aleatorio = ["completo",
+                                        "dirigido", "ponderado", "random"]
+                tipo_grafoaleatorio_option = st.sidebar.selectbox(
+                    "Tipo de grafo aleatorio", tipo_grafo_aleatorio)
+                if tipo_grafoaleatorio_option == "completo":
+                    grafo_completo()
+                elif tipo_grafoaleatorio_option == "dirigido":
+                    nuevo_grafo_aleatorio()
+                elif tipo_grafoaleatorio_option == "random":
+                    nuevo_grafo_aleatorio()
 
         if archivo_selection == "Abrir":
 
@@ -183,7 +192,7 @@ def nuevo_grafo_personalizado():
         st.session_state["last_action"] = "Delete edge"
 
     config = Config(width=900, height=900, directed=False,
-                    nodeHighlightBehavior=True)
+                    nodeHighlightBehavior=True,  physics=False)
     agraph(nodes=st.session_state['personalizado_nodes'],
            edges=st.session_state['personalizado_edges'], config=config)
 
@@ -210,7 +219,7 @@ def abrir_grafo():
                     linked_node['weight'])))
 
         config = Config(width=1000, height=500, directed=False,
-                        nodeHighlightBehavior=True)
+                        nodeHighlightBehavior=True,  physics=False)
         agraph(nodes=nodes, edges=edges, config=config)
 
 
@@ -240,7 +249,7 @@ def importar_datos():
                     linked_node_data[1])))
 
         config = Config(width=1000, height=500, directed=False,
-                        nodeHighlightBehavior=True)
+                        nodeHighlightBehavior=True,  physics=False)
         agraph(nodes=nodes, edges=edges, config=config)
 
 # Metdo par amostrar lo que se va a mostrar en acerca de grafos
@@ -299,7 +308,7 @@ def nuevo_grafo_aleatorio():
 
         # Create a config object
         config = Config(width=2000, height=500, directed=False,
-                        nodeHighlightBehavior=True, highlightColor="#F7A7A6")
+                        nodeHighlightBehavior=True, highlightColor="#F7A7A6",  physics=False)
 
         # Draw the graph
         return agraph(nodes=nodes, edges=edges, config=config)
@@ -338,6 +347,39 @@ def guardar_grafo_actual(nodes, edges):
             st.success(f"Grafo guardado correctamente en {ruta_archivo}")
         except Exception as e:
             st.error(f"Error al guardar el grafo: {e}")
+
+
+def grafo_completo():
+    # Ask the user for the number of nodes
+    num_nodes = st.number_input('Número de nodos', min_value=1, value=5)
+
+    # Initialize session state if not already initialized
+    if 'nodes' not in st.session_state:
+        st.session_state['nodes'] = []
+    if 'edges' not in st.session_state:
+        st.session_state['edges'] = []
+
+    # Add a button to generate a new complete graph
+    if st.button('Generar nuevo grafo completo'):
+        # Create an empty graph
+        G = nx.complete_graph(num_nodes)
+
+        # Convert the graph into a list of nodes and edges for streamlit_agraph
+        nodes = [Node(str(i), label=f"Node {i}", color="green", font={
+                      "color": "white"}) for i in G.nodes]
+        edges = [Edge(str(edge[0]), str(edge[1]), label="1")
+                 for edge in G.edges]
+
+        # Update session state with the new nodes and edges
+        st.session_state['nodes'] = nodes
+        st.session_state['edges'] = edges
+
+        # Create a config object
+        config = Config(width=2000, height=500, directed=False,
+                        nodeHighlightBehavior=True, highlightColor="#F7A7A6", physics=False)
+
+        # Draw the graph
+        return agraph(nodes=nodes, edges=edges, config=config)
 
 
 if __name__ == "__main__":
