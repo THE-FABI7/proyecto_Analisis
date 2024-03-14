@@ -9,7 +9,7 @@ import random
 from src.models.GraphExporter import GraphExporter
 from src.models.GraphManager import GraphManager
 
-class App:
+class UIManager:
     def __init__(self):
         self.graph_manager = GraphManager()
         self.exporter = GraphExporter()
@@ -25,17 +25,14 @@ class App:
         self.load_css()
 
             
-        navbar_options = ["Archivo", "Editar", "Ejecutar",
-                      "Herramientas", "Ventana", "Ayuda"]
-        archivo_options = ["nuevo grafo", "Abrir", "Cerrar", "Guardar",
-                       "Guardar como", "Exportar datos", "Importar datos", "Salir"]
+        navbar_options = ["Archivo", "Editar", "Ejecutar", "Herramientas", "Ventana", "Ayuda"]
+        archivo_options = ["nuevo grafo", "Abrir", "Cerrar", "Guardar", "Guardar como", "Exportar datos", "Importar datos", "Salir"]
         editar_options = ["Deshacer", "Arco", "Nodo"]
         ejecutar_options = ["procesos"]
         ventana_options = ["Gráfica", "Tabla"]
         ayuda_options = ["Ayuda", "Acerca de Grafos"]
-        # Usa un archivo de imagen y muéstralo en el encabezado de la barra lateral usando st.image.
-        st.sidebar.markdown(
-            f'<img src="https://www.ucaldas.edu.co/portal/wp-content/uploads/2020/05/monitorias-1.jpg" width="150" class="my-sidebar-image">', unsafe_allow_html=True)
+
+        st.sidebar.markdown(f'<img src="https://www.ucaldas.edu.co/portal/wp-content/uploads/2020/05/monitorias-1.jpg" width="150" class="my-sidebar-image">', unsafe_allow_html=True)
 
         navbar_selection = st.sidebar.selectbox("Menú", navbar_options)
 
@@ -60,29 +57,47 @@ class App:
             if archivo_selection == "Guardar":
                 guardar_grafo_actual(
                     st.session_state['nodes'], st.session_state['edges'])
+                
             if archivo_selection == "Guardar como":
                 st.write("Has seleccionado la Sub opción 3")
+
             if archivo_selection == "Exportar datos":
-                st.write("Has seleccionado la opción de exportación a Excel")
+                export_option = st.sidebar.radio("Seleccione el formato de exportación:", ["Excel", "Imagen"])
+                if export_option == "Excel":
+                    file_path = st.text_input("Ingrese el nombre del archivo Excel:", "grafo.xlsx")
+                    if st.button("Exportar a Excel"):
+                        self.exporter.export_to_excel(file_path)
+                        st.success(f"Grafo exportado a {file_path} con éxito.")
+                elif export_option == "Imagen":
+                    file_path = st.text_input("Ingrese el nombre del archivo de la imagen:", "grafo.png")
+                    if st.button("Exportar a Imagen"):
+                        self.exporter.export_to_image(file_path)
+                        st.success(f"Grafo exportado a {file_path} con éxito.")
+
             if archivo_selection == "Importar datos":
                 importar_datos()
 
         elif navbar_selection == "Editar":
             archivo_selection = st.sidebar.selectbox("Opciones", editar_options)
+
             if archivo_selection == "Deshacer":
                 st.write("Has seleccionado la Sub opción 1")
+
             if archivo_selection == "Nodo":
                 st.write("Has seleccionado la Sub opción 1")
+
             if archivo_selection == "Arco":
                 st.write("Has seleccionado la Sub opción arco")
 
         elif navbar_selection == "Ejecutar":
             archivo_selection = st.sidebar.selectbox("Opciones", ejecutar_options)
+
             if archivo_selection == "procesos":
                 st.write("Has seleccionado la Sub opción 1")
 
         elif navbar_selection == "Ventana":
             archivo_selection = st.sidebar.selectbox("Opciones", ventana_options)
+
             if archivo_selection == "Gráfica":
                 st.write("Has seleccionado la Sub opción 1")
             if archivo_selection == "Tabla":
