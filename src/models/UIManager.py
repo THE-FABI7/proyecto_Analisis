@@ -262,9 +262,8 @@ def importar_datos():
                         nodeHighlightBehavior=True,  physics=False)
         agraph(nodes=nodes, edges=edges, config=config)
 
+
 # Metdo par amostrar lo que se va a mostrar en acerca de grafos
-
-
 def acerca_de_grafos():
     st.write("acerca_de_grafos")
     st.write("Grafos es una aplicación que permite crear, editar y visualizar grafos. Esta aplicación fue desarrollada por estudiantes de la Universidad de Caldas como proyecto final para la asignatura de Analisis y Diseño de algoritmos.")

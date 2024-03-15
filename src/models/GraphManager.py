@@ -1,5 +1,4 @@
 # GraphManager.py
-
 import random
 import networkx as nx
 
