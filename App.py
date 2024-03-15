@@ -43,7 +43,7 @@ def main():
                 if tipo_grafoaleatorio_option == "completo":
                     grafo_completo()
                 elif tipo_grafoaleatorio_option == "dirigido":
-                    nuevo_grafo_aleatorio()
+                    grafo_dirigido()
                 elif tipo_grafoaleatorio_option == "random":
                     nuevo_grafo_aleatorio()
 
@@ -367,7 +367,7 @@ def grafo_completo():
         # Convert the graph into a list of nodes and edges for streamlit_agraph
         nodes = [Node(str(i), label=f"Node {i}", color="green", font={
                       "color": "white"}) for i in G.nodes]
-        edges = [Edge(str(edge[0]), str(edge[1]), label="1")
+        edges = [Edge(str(edge[0]), str(edge[1]), label=str(random.randint(1, 99)))
                  for edge in G.edges]
 
         # Update session state with the new nodes and edges
@@ -380,6 +380,23 @@ def grafo_completo():
 
         # Draw the graph
         return agraph(nodes=nodes, edges=edges, config=config)
+
+
+def grafo_dirigido():
+    num_nodos = st.number_input('Número de nodos', min_value=1, value=5)
+    # Generar un grafo dirigido con networkx
+    G = nx.DiGraph()
+    G.add_nodes_from(range(num_nodos))
+    # Agregar aristas (opcional, puedes agregar tus propias aristas aquí)
+    G.add_edges_from([(i, (i+1) % num_nodos) for i in range(num_nodos)])
+    # Convertir el grafo de networkx a una lista de nodos y aristas que streamlit_agraph puede usar
+    nodes = [Node(str(node), label=f"{node}", font={
+                  "color": "white"}) for node in G.nodes]
+    edges = [Edge(str(edge[0]), str(edge[1])) for edge in G.edges]
+    # Visualizar el grafo con streamlit_agraph
+    config = Config(height=500, width=500, nodeHighlightBehavior=True,
+                    highlightColor="#F7A7A6", directed=True, labelField="id", physics=False)
+    agraph(nodes=nodes, edges=edges, config=config)
 
 
 if __name__ == "__main__":
