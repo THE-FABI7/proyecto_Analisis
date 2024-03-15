@@ -25,14 +25,17 @@ class UIManager:
         self.load_css()
 
             
-        navbar_options = ["Archivo", "Editar", "Ejecutar", "Herramientas", "Ventana", "Ayuda"]
-        archivo_options = ["nuevo grafo", "Abrir", "Cerrar", "Guardar", "Guardar como", "Exportar datos", "Importar datos", "Salir"]
+        navbar_options = ["Archivo", "Editar", "Ejecutar",
+                      "Herramientas", "Ventana", "Ayuda"]
+        archivo_options = ["nuevo grafo", "Abrir", "Cerrar", "Guardar",
+                       "Guardar como", "Exportar datos", "Importar datos", "Salir"]
         editar_options = ["Deshacer", "Arco", "Nodo"]
         ejecutar_options = ["procesos"]
         ventana_options = ["Gráfica", "Tabla"]
         ayuda_options = ["Ayuda", "Acerca de Grafos"]
-
-        st.sidebar.markdown(f'<img src="https://www.ucaldas.edu.co/portal/wp-content/uploads/2020/05/monitorias-1.jpg" width="150" class="my-sidebar-image">', unsafe_allow_html=True)
+    # Usa un archivo de imagen y muéstralo en el encabezado de la barra lateral usando st.image.
+        st.sidebar.markdown(
+            f'<img src="https://www.ucaldas.edu.co/portal/wp-content/uploads/2020/05/monitorias-1.jpg" width="150" class="my-sidebar-image">', unsafe_allow_html=True)
 
         navbar_selection = st.sidebar.selectbox("Menú", navbar_options)
 
@@ -45,7 +48,16 @@ class UIManager:
                 if tipo_grafo == "personalizado":
                     nuevo_grafo_personalizado()
                 else:
-                    nuevo_grafo_aleatorio()
+                    tipo_grafo_aleatorio = ["completo",
+                                        "dirigido", "ponderado", "random"]
+                    tipo_grafoaleatorio_option = st.sidebar.selectbox(
+                        "Tipo de grafo aleatorio", tipo_grafo_aleatorio)
+                    if tipo_grafoaleatorio_option == "completo":
+                        grafo_completo()
+                    elif tipo_grafoaleatorio_option == "dirigido":
+                        nuevo_grafo_aleatorio()
+                    elif tipo_grafoaleatorio_option == "random":
+                        nuevo_grafo_aleatorio()
 
             if archivo_selection == "Abrir":
 
@@ -57,47 +69,30 @@ class UIManager:
             if archivo_selection == "Guardar":
                 guardar_grafo_actual(
                     st.session_state['nodes'], st.session_state['edges'])
-                
             if archivo_selection == "Guardar como":
                 st.write("Has seleccionado la Sub opción 3")
-
             if archivo_selection == "Exportar datos":
-                export_option = st.sidebar.radio("Seleccione el formato de exportación:", ["Excel", "Imagen"])
-                if export_option == "Excel":
-                    file_path = st.text_input("Ingrese el nombre del archivo Excel:", "grafo.xlsx")
-                    if st.button("Exportar a Excel"):
-                        self.exporter.export_to_excel(file_path)
-                        st.success(f"Grafo exportado a {file_path} con éxito.")
-                elif export_option == "Imagen":
-                    file_path = st.text_input("Ingrese el nombre del archivo de la imagen:", "grafo.png")
-                    if st.button("Exportar a Imagen"):
-                        self.exporter.export_to_image(file_path)
-                        st.success(f"Grafo exportado a {file_path} con éxito.")
-
+                st.write("Has seleccionado la opción de exportación a Excel")
+                # necesito exportar el grafo generado como imagen creame una funcion para eso
             if archivo_selection == "Importar datos":
                 importar_datos()
 
         elif navbar_selection == "Editar":
             archivo_selection = st.sidebar.selectbox("Opciones", editar_options)
-
             if archivo_selection == "Deshacer":
                 st.write("Has seleccionado la Sub opción 1")
-
             if archivo_selection == "Nodo":
                 st.write("Has seleccionado la Sub opción 1")
-
             if archivo_selection == "Arco":
                 st.write("Has seleccionado la Sub opción arco")
 
         elif navbar_selection == "Ejecutar":
             archivo_selection = st.sidebar.selectbox("Opciones", ejecutar_options)
-
             if archivo_selection == "procesos":
                 st.write("Has seleccionado la Sub opción 1")
 
         elif navbar_selection == "Ventana":
             archivo_selection = st.sidebar.selectbox("Opciones", ventana_options)
-
             if archivo_selection == "Gráfica":
                 st.write("Has seleccionado la Sub opción 1")
             if archivo_selection == "Tabla":
@@ -112,8 +107,6 @@ class UIManager:
                 st.write("Has seleccionado la Sub opción 1")
             if archivo_selection == "Acerca de Grafos":
                 acerca_de_grafos()
-        pass
-    # Carga los estilos CSS directamente en el archivo Python
     
 # dibuja el grafo dependiendo los valores que el usuario ingresa
 def draw_graph(G):
@@ -197,15 +190,26 @@ def nuevo_grafo_personalizado():
             node for node in st.session_state['personalizado_nodes'] if node.id != selected_node_id]
         st.session_state['personalizado_id_map'].pop(selected_node_id, None)
 
+    actual_source = st.sidebar.selectbox("Seleccione la arista", [(
+        edge.source, edge.to) for edge in st.session_state['personalizado_edges']])
+    actuaal_edge = next(
+        (edge for edge in st.session_state['personalizado_edges']
+         if edge.source == actual_source[0] and edge.to == actual_source[1]), None,
+
+    )
+    delete_arista_button = st.sidebar.button("Eliminar arista")
+    if delete_arista_button:
+        st.session_state["personalizado_edges"].remove(actuaal_edge)
+        st.session_state["last_action"] = "Delete edge"
+
     config = Config(width=900, height=900, directed=False,
-                    nodeHighlightBehavior=True)
+                    nodeHighlightBehavior=True,  physics=False)
     agraph(nodes=st.session_state['personalizado_nodes'],
            edges=st.session_state['personalizado_edges'], config=config)
 
 
+
 # Metoddo para abrir el grafo
-
-
 def abrir_grafo():
     uploaded_file = st.file_uploader("Elige un archivo .json", type="json")
     if uploaded_file is not None:
@@ -225,7 +229,7 @@ def abrir_grafo():
                     linked_node['weight'])))
 
         config = Config(width=1000, height=500, directed=False,
-                        nodeHighlightBehavior=True)
+                        nodeHighlightBehavior=True,  physics=False)
         agraph(nodes=nodes, edges=edges, config=config)
 
 
@@ -255,7 +259,7 @@ def importar_datos():
                     linked_node_data[1])))
 
         config = Config(width=1000, height=500, directed=False,
-                        nodeHighlightBehavior=True)
+                        nodeHighlightBehavior=True,  physics=False)
         agraph(nodes=nodes, edges=edges, config=config)
 
 # Metdo par amostrar lo que se va a mostrar en acerca de grafos
@@ -268,8 +272,6 @@ def acerca_de_grafos():
     st.write("Fabian Alberto Guancha vera")
 
 # TODO:hay un problema a el momento de dar click sobre un nodo, se desaparece y renderiza un nuevo grafo
-
-
 def nuevo_grafo_aleatorio():
     # Ask the user for the number of nodes and edges
     num_nodes = st.number_input('Number of nodes', min_value=1, value=5)
@@ -314,7 +316,7 @@ def nuevo_grafo_aleatorio():
 
         # Create a config object
         config = Config(width=2000, height=500, directed=False,
-                        nodeHighlightBehavior=True, highlightColor="#F7A7A6")
+                        nodeHighlightBehavior=True, highlightColor="#F7A7A6",  physics=False)
 
         # Draw the graph
         return agraph(nodes=nodes, edges=edges, config=config)
@@ -353,3 +355,36 @@ def guardar_grafo_actual(nodes, edges):
             st.success(f"Grafo guardado correctamente en {ruta_archivo}")
         except Exception as e:
             st.error(f"Error al guardar el grafo: {e}")
+
+
+def grafo_completo():
+    # Ask the user for the number of nodes
+    num_nodes = st.number_input('Número de nodos', min_value=1, value=5)
+
+    # Initialize session state if not already initialized
+    if 'nodes' not in st.session_state:
+        st.session_state['nodes'] = []
+    if 'edges' not in st.session_state:
+        st.session_state['edges'] = []
+
+    # Add a button to generate a new complete graph
+    if st.button('Generar nuevo grafo completo'):
+        # Create an empty graph
+        G = nx.complete_graph(num_nodes)
+
+        # Convert the graph into a list of nodes and edges for streamlit_agraph
+        nodes = [Node(str(i), label=f"Node {i}", color="green", font={
+                      "color": "white"}) for i in G.nodes]
+        edges = [Edge(str(edge[0]), str(edge[1]), label="1")
+                 for edge in G.edges]
+
+        # Update session state with the new nodes and edges
+        st.session_state['nodes'] = nodes
+        st.session_state['edges'] = edges
+
+        # Create a config object
+        config = Config(width=2000, height=500, directed=False,
+                        nodeHighlightBehavior=True, highlightColor="#F7A7A6", physics=False)
+
+        # Draw the graph
+        return agraph(nodes=nodes, edges=edges, config=config)
