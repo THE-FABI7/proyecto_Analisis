@@ -75,7 +75,7 @@ class GraphManager:
             node_ids = [node.id for node in st.session_state['personalizado_nodes']]
             if edge_start in node_ids and edge_end in node_ids:
                 st.session_state['personalizado_edges'].append(Edge(
-                    source=st.session_state['personalizado_id_map'][edge_start], target=st.session_state['personalizado_id_map'][edge_end], label=edge_weight, color=edge_color,  width=2.0))
+                    source=st.session_state['personalizado_id_map'][edge_start], target=st.session_state['personalizado_id_map'][edge_end], label=edge_weight, color=edge_color,  width=3.0))
                 self.graph.add_edge(edge_start, edge_end, weight=edge_weight, color=edge_color)
                 self.actualizar_estado_session()
 
@@ -118,15 +118,24 @@ class GraphManager:
         )
         delete_arista_button = st.sidebar.button("Eliminar arista")
         if delete_arista_button:
-            st.session_state["personalizado_edges"].remove(actuaal_edge)
-            st.session_state["last_action"] = "Delete edge"
-
+            if actuaal_edge is not None:
+                # Cambia el color y el ancho de la arista
+                actuaal_edge.color = 'rgba(254, 20, 56, 0.2)'
+                actuaal_edge.width = 0.5
+                # Encuentra la arista correspondiente en el gráfico y cambia su color y ancho
+                for u, v, data in self.graph.edges(data=True):
+                    if u == actuaal_edge.source and v == actuaal_edge.to:
+                         data['color'] = actuaal_edge.color
+                         data['width'] = actuaal_edge.width
+                st.warning('Esta arista ya fue eliminada anteriormente')
+                st.session_state["last_action"] = "Delete edge"
+            else:
+                st.error('No se encontró ninguna arista para eliminar.')
+        
         config = Config(width=900, height=900, directed=False,
                         nodeHighlightBehavior=True,  physics=False)
         agraph(nodes=st.session_state['personalizado_nodes'],
             edges=st.session_state['personalizado_edges'], config=config)
-
-
 
     # Metoddo para abrir el grafo
     def abrir_grafo(self):

@@ -17,3 +17,9 @@ Instalar los requerimientos necesarios del proyecto.
 pip install -r requirements.txt
 ``````
 Este comando instalará automáticamente las dependencias especificadas en el archivo `requirements.txt`. Asegúrese de ejecutarlo desde el entorno virtual creado previamente.
+
+# Ejecución del proyecto
+Para ejecutar el proyecto parese sobre la terminal y ejecute el siguiente comando 
+``````
+streamlit run app.py
+``````
