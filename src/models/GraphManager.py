@@ -283,7 +283,7 @@ class GraphManager:
         # Almacena el grafo generado en st.session_state.graph
         st.session_state.graph = G
 
-        # Convierte el grafo en una lista de nodos y aristas para streamlit_agraph
+        # Convierte el grafo en una lista de nodos y aristas para strreamlit_agraph
         nodes = [Node(str(node), label=f"Node {node}", font={"color": "white"}) for node in G.nodes]
         edges = [Edge(source=str(u), target=str(v), label="1") for u, v in G.edges]
 
@@ -323,3 +323,40 @@ class GraphManager:
 
     def get_graph(self):
         return self.graph
+    
+    def mostrarGrafoTabla(self, nodes, edges, st):
+        # Crear el grafo con networkx
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            G.add_edge(edge.source, edge.to, weight=edge.label)
+
+        # Crear un DataFrame con los nodos
+        df_nodes = pd.DataFrame(columns=['Node', 'Label'])
+        for node, data in G.nodes(data=True):
+            df_nodes = pd.concat([df_nodes, pd.DataFrame({'Node': [node], 'Label': [data['label']]})], ignore_index=True)
+
+        # Crear un DataFrame con las aristas
+        df_edges = pd.DataFrame(columns=['Source', 'Target', 'Weight'])
+        for u, v, w in G.edges(data='weight'):
+            df_edges = pd.concat([df_edges, pd.DataFrame({'Source': [u], 'Target': [v], 'Weight': [w]})], ignore_index=True)
+
+        # Mostrar los DataFrames en Streamlit
+        st.write('Nodos')
+        st.write(df_nodes)
+        st.write('Aristas')
+        st.write(df_edges)
+        
+    # def mostrarGrafoEnGrafica(self, nodes, edges, st):
+        # # Crear el grafo con networkx
+        # G = nx.Graph()
+        # for node in nodes:
+            # G.add_node(node.id, label=node.label)
+        # for edge in edges:
+            # G.add_edge(edge.source, edge.to, weight=edge.label)
+
+        # # Dibujar el grafo con networkx
+        # plt.figure(figsize=(10, 5))
+        # nx.draw(G, with_labels=True)
+        # st.pyplot()

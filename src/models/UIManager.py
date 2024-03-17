@@ -146,9 +146,11 @@ class UIManager:
         elif navbar_selection == "Ventana":
             archivo_selection = st.sidebar.selectbox("Opciones", ventana_options)
             if archivo_selection == "Gráfica":
-                st.write("Has seleccionado la Sub opción 1")
+                st.write("Los Datos del grafo en grafica son: ")
             if archivo_selection == "Tabla":
-                st.write("Has seleccionado la Sub opción 1")
+                st.write("Los Datos del grafo en tabla son:")
+                self.graph_manager.mostrarGrafoTabla(st.session_state.nodes, st.session_state.edges,st)
+                
 
         elif navbar_selection == "Herramientas":
             st.write("Has seleccionado la Sub opción 1")
