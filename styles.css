@@ -79,8 +79,19 @@ svg {
   border-color: #64d368; /* Cambio el color del borde al pasar el cursor sobre el botón */
 }
 
-
 .st-emotion-cache-16txtl3 {
   padding: 6rem 1.5rem;
   background-color: black;
+}
+
+.st-emotion-cache-hc3laj {
+  position: fixed;
+  left: 96%;
+  transform: translateX(-50%);
+}
+
+.st-emotion-cache-hc3laj:hover {
+  background-color: #4a9248; /* Un color más oscuro para más opacidad */
+  border-color: #4a9248;
+  opacity: 0.8; /* O puedes usar la propiedad opacity para hacerlo más opaco */
 }

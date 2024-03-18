@@ -86,7 +86,15 @@ class UIManager:
                 self.exporter.guardar_grafo_actual(st.session_state['nodes'], st.session_state['edges'])
                 
             if archivo_selection == "Guardar como":
-                st.write("Has seleccionado la Sub opción 3")
+                ruta = './Data/'
+                nombreArchivo = 'grafo_exportado.json'
+                nombreUsuario = st.text_input("Nombre del archivo", value=nombreArchivo)
+
+                if not nombreUsuario.endswith('.json'):
+                    nombreUsuario += '.json'
+                    
+                nombreCompleto = os.path.join(ruta, nombreUsuario)
+                GraphExporter.exportar_JSON(nombreCompleto, st.session_state.nodes, st.session_state.edges)
                 
             if archivo_selection == "Exportar datos":
                 st.write("Has seleccionado la opción de exportación de datos")
