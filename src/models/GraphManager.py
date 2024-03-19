@@ -119,9 +119,7 @@ class GraphManager:
         delete_arista_button = st.sidebar.button("Eliminar arista")
         if delete_arista_button:
             if actuaal_edge is not None:
-                # Cambia el color y el ancho de la arista
-                actuaal_edge.color = 'rgba(254, 20, 56, 0.2)'
-                actuaal_edge.width = 0.5
+                actuaal_edge.dashes = True
                 # Encuentra la arista correspondiente en el gráfico y cambia su color y ancho
                 for u, v, data in self.graph.edges(data=True):
                     if u == actuaal_edge.source and v == actuaal_edge.to:
