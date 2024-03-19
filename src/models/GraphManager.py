@@ -100,7 +100,21 @@ class GraphManager:
                         node.label = new_node_label
                     if new_node_color != "":
                         node.color = new_node_color
-
+        #boton para editar aristas
+        edge_delete = st.sidebar.selectbox("arista a editar", [(
+            edge.source, edge.to) for edge in st.session_state['personalizado_edges']])
+        actual_edge = next(
+            (edge for edge in st.session_state['personalizado_edges']
+        if edge.source == edge_delete[0] and edge.to == edge_delete[1]), None,)
+        
+        selected_weight = st.sidebar.number_input("Nuevo Peso", min_value=1, max_value=1000, value=1)
+        new_edge_color = st.sidebar.color_picker("Nuevo color de la arista")
+        edit_edge_button =  st.sidebar.button("Editar arista")
+        if edit_edge_button:
+                actual_edge.weight = selected_weight
+                actual_edge.label = str(selected_weight)
+                actual_edge.color = new_edge_color   
+        
         selected_node_id = st.sidebar.selectbox("Selecciona un nodo para eliminar", options=[
             node.id for node in st.session_state['personalizado_nodes']])
         delete_node_button = st.sidebar.button("Eliminar nodo")
@@ -109,13 +123,11 @@ class GraphManager:
                 node for node in st.session_state['personalizado_nodes'] if node.id != selected_node_id]
             st.session_state['personalizado_id_map'].pop(selected_node_id, None)
 
-        actual_source = st.sidebar.selectbox("Seleccione la arista", [(
+        edge_delete = st.sidebar.selectbox("Seleccione la arista", [(
             edge.source, edge.to) for edge in st.session_state['personalizado_edges']])
         actuaal_edge = next(
             (edge for edge in st.session_state['personalizado_edges']
-            if edge.source == actual_source[0] and edge.to == actual_source[1]), None,
-
-        )
+            if edge.source == edge_delete[0] and edge.to == edge_delete[1]), None, )
         delete_arista_button = st.sidebar.button("Eliminar arista")
         if delete_arista_button:
             if actuaal_edge is not None:
