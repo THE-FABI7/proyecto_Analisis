@@ -163,8 +163,15 @@ class GraphManager:
                 nodes.append(
                     Node(id=node['id'], label=node['label'], color="green", font={"color": "white"}))
                 for linked_node in node['linkedTo']:
+                    edge_color = GraphManager.asignarColorArista(linked_node['weight'])
                     edges.append(Edge(source=node['id'], target=linked_node['nodeId'], label=str(
-                        linked_node['weight'])))
+                        linked_node['weight']),  color=edge_color))
+                    #si las aristas no tienen peso el color de las aristas sea por defecto morado
+                    if linked_node['weight'] == "":
+                        edge_color = "purple"
+                        edges.append(Edge(source=node['id'], target=linked_node['nodeId'], label=str(
+                        linked_node['weight']),  color=edge_color))
+
 
             config = Config(width=1000, height=500, directed=False,
                         nodeHighlightBehavior=True,  physics=False)
@@ -347,6 +354,21 @@ class GraphManager:
                 
             else:
                 st.warning("No se ha seleccionado ningún nodo.")
+    
+    
+    def asignarColorArista(peso):
+        if peso >= 0 and peso <= 50:
+            return "blue"
+        elif peso > 50 and peso <= 100:
+            return "black"
+        elif peso > 100 and peso <= 150:
+            return "yellow"
+        elif  peso > 150 and peso <= 200:
+            return "purple"
+        elif peso > 200 and peso <= 250:
+            return "red"
+        else:
+            return "white"
     
     
     def mostrarGrafoTabla(self, nodes, edges, st):

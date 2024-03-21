@@ -78,6 +78,7 @@ class UIManager:
             if archivo_selection == "Abrir":
 
                 self.graph_manager.abrir_grafo()
+                
             
             elif archivo_selection == "Salir":
                 os._exit(0)
