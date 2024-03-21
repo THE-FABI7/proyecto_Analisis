@@ -127,8 +127,6 @@ class UIManager:
                         st.success("Datos exportados a archivo Excel.")
 
                     elif export_format == 'imagen':
-                    # necesito exportar el grafo generado como imagen creame una funcion para eso
-                    # Breve, ya llama a todas esas funciones desde exportar datos :)
                         # Llama a la función de exportación a imagen
                         grafo_actual = self.graph_manager.get_graph()
                         self.exporter.exportar_Imagen(grafo_actual)
@@ -142,7 +140,7 @@ class UIManager:
             if archivo_selection == "Deshacer":
                 st.write("Has seleccionado la Sub opción 1")
             if archivo_selection == "Nodo":
-                st.write("Has seleccionado la Sub opción 1")
+                self.graph_manager.buscarNodo(st)
             if archivo_selection == "Arco":
                 st.write("Has seleccionado la Sub opción arco")
 

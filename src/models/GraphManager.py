@@ -334,6 +334,21 @@ class GraphManager:
     def get_graph(self):
         return self.graph
     
+    def buscarNodo(self, st):
+        selectedNodoBuscar = st.sidebar.selectbox("Buscar Nodo:", [node.label for node in st.session_state.nodes])
+                
+        if st.sidebar.button("Buscar Nodo"):
+            # Lógica para buscar el nodo seleccionado
+            nodoBuscar = next((node for node in st.session_state.nodes if node.label == selectedNodoBuscar), None)
+            
+            if nodoBuscar:
+                nodoBuscar.color = "white"
+                st.success("Allado!")
+                
+            else:
+                st.warning("No se ha seleccionado ningún nodo.")
+    
+    
     def mostrarGrafoTabla(self, nodes, edges, st):
         # Crear el grafo con networkx
         G = nx.Graph()
