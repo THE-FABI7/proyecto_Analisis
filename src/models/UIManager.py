@@ -30,7 +30,7 @@ class UIManager:
             st.session_state.nodes = []
         if 'edges' not in st.session_state:
             st.session_state.edges = []
-
+                
         if st.sidebar.button('Inicio'):
             st.experimental_rerun()
 
@@ -52,14 +52,15 @@ class UIManager:
             archivo_selection = st.sidebar.selectbox("Opciones", archivo_options)
 
             if archivo_selection == "nuevo grafo":
-                tipo_grafo_options = ["personalizado", "Aleatorio"]
+
+                tipo_grafo_options = ["personalizado", "Aleatorio", "Bipartito"]
                 tipo_grafo = st.sidebar.selectbox(
                     "Tipo de grafo", tipo_grafo_options)
                 
                 if tipo_grafo == "personalizado":
                     self.graph_manager.nuevo_grafo_personalizado()
                     
-                else:
+                elif tipo_grafo == 'Aleatorio':
                     tipo_grafo_aleatorio = ["completo",
                                         "dirigido", "ponderado", "random"]
                     tipo_grafoaleatorio_option = st.sidebar.selectbox(
@@ -73,6 +74,15 @@ class UIManager:
                         
                     elif tipo_grafoaleatorio_option == "random":
                         self.graph_manager.nuevo_grafo_aleatorio()
+
+                elif tipo_grafo == 'Bipartito':
+                    numNodosGrupo1 = st.sidebar.number_input("Número de nodos en Grupo 1", min_value=1, value=5)
+                    numNodosGrupo2 = st.sidebar.number_input("Número de nodos en Grupo 2", min_value=1, value=5)
+
+                    # Llamando a la función para crear un grafo bipartito
+                    nodes, edges = self.graph_manager.GrafoBipartito(numNodosGrupo1, numNodosGrupo2)
+
+                
                         
 
             if archivo_selection == "Abrir":
@@ -148,7 +158,20 @@ class UIManager:
         elif navbar_selection == "Ejecutar":
             archivo_selection = st.sidebar.selectbox("Opciones", ejecutar_options)
             if archivo_selection == "procesos":
-                st.write("Has seleccionado la Sub opción 1")
+                st.write("Has seleccionado la Sub opción de procesos")
+                selected_sub_option = st.selectbox(
+                    "Seleccionar un proceso:",
+                    ["¿El grafo es bipartito?", "¿El grafo es bipartito conexo ó disconexo?"]
+                )
+                if selected_sub_option == "¿El grafo es bipartito?":
+                    if  self.graph_manager.esBipartito(st.session_state.nodes, st.session_state.edges):
+                        st.text("El grafo es bipartito")
+                    else:
+                        st.text("El grafo no es bipartito")
+                elif selected_sub_option == "¿El grafo es bipartito conexo ó disconexo?":
+                    salida = self.graph_manager.esBipartitoConexoOdisconexo(st.session_state.nodes, st.session_state.edges)
+                    st.text(salida)
+
 
         elif navbar_selection == "Ventana":
             archivo_selection = st.sidebar.selectbox("Opciones", ventana_options)

@@ -4,10 +4,12 @@ import streamlit as st
 import json
 import networkx as nx
 import matplotlib.pyplot as plt
+from networkx.algorithms import bipartite
 from streamlit_agraph import agraph, Node, Edge, Config
 import random
 import networkx as nx
 import io
+from networkx.algorithms.components import is_connected
 
 class GraphManager:
     def __init__(self):
@@ -314,28 +316,50 @@ class GraphManager:
 
 
     def GrafoBipartito(self, numNodosGrupo1: int, numNodosGrupo2: int):
-        # Crear grafo bipartito completo
-        self.graph = nx.complete_bipartite_graph(numNodosGrupo1, numNodosGrupo2)
+        print("Creando el grafo bipartito")
+        G = nx.complete_bipartite_graph(numNodosGrupo1, numNodosGrupo2)
 
-        # Agregar etiquetas y colores a los nodos
-        for i, node in enumerate(self.graph.nodes()):
-            grupo = 'Grupo 1' if self.graph.nodes[node]['bipartite'] == 0 else 'Grupo 2'
-            self.graph.nodes[node]['label'] = f'Nodo {i + 1} ({grupo})'
-            self.graph.nodes[node]['color'] = 'skyblue' if grupo == 'Grupo 1' else 'lightgreen'
+        print("Agregando etiquetas y pesos a los nodos y aristas")
+        for i, (node, data) in enumerate(G.nodes(data=True)):
+            data['label'] = f'Nodo {i + 1}'
+            data['color'] = 'skyblue' if i < numNodosGrupo1 else 'lightgreen'
+        
+        for u, v, data in G.edges(data=True):
+            data['weight'] = random.randint(1, 100)
+            data['color'] = 'gray'
 
-        # Agregar pesos aleatorios a las aristas
-        for u, v in self.graph.edges():
-            self.graph.edges[u, v]['weight'] = random.randint(1, 100)
+        print("Creando listas de nodos y aristas para visualización")
+        nodes = [Node(id=str(node), label=data['label'], color=data['color']) for node, data in G.nodes(data=True)]
+        edges = [Edge(source=str(u), target=str(v), label=str(data['weight']), color=data['color']) for u, v, data in G.edges(data=True)]
 
-        # Actualizar el estado de la sesión para reflejar los cambios en el grafo
-        self.actualizar_estado_session()
+        # Actualiza el estado de la sesión con los nuevos nodos y aristas
+        st.session_state['nodes'] = nodes
+        st.session_state['edges'] = edges
 
-        # Preparar nodos y aristas para visualización
-        nodes = [Node(id=str(n), label=self.graph.nodes[n]['label'], color=self.graph.nodes[n]['color']) for n in self.graph.nodes()]
-        edges = [Edge(source=str(u), target=str(v), label=str(self.graph.edges[u, v]['weight'])) for u, v in self.graph.edges()]
+        # Crea un objeto de configuración
+        # Configura y muestra el grafo en la interfaz de usuario
+        config = Config(height=500, width=800, nodeHighlightBehavior=True, highlightColor="#F7A7A6", directed=True, physics=False)
 
-        # Retornar nodos y aristas para visualización
+        # Dibuja el grafo
+        agraph(nodes=nodes, edges=edges, config=config)
+
+        print("Devolviendo nodos y aristas")
         return nodes, edges
+
+    #@staticmethod
+    #def asignarColorArista(peso):
+        #if peso >= 0 and peso <= 20:
+            #return "blue"
+        #elif peso > 20 and peso <= 40:
+            #return "green"
+        #elif peso > 40 and peso <= 60:
+            #return "yellow"
+        #elif peso > 60 and peso <= 80:
+            #return "orange"
+        #elif peso > 80:
+            #return "red"
+        #else:
+            #return "gray"#
 
 
     def get_graph(self):
@@ -355,7 +379,7 @@ class GraphManager:
             else:
                 st.warning("No se ha seleccionado ningún nodo.")
     
-    
+    @staticmethod
     def asignarColorArista(peso):
         if peso >= 0 and peso <= 50:
             return "blue"
@@ -407,3 +431,72 @@ class GraphManager:
         # plt.figure(figsize=(10, 5))
         # nx.draw(G, with_labels=True)
         # st.pyplot()
+
+    def esBipartito(self, nodes, edges) -> bool:
+        # Crear el grafo con networkx
+        salida = False
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            G.add_edge(edge.source, edge.to, weight=edge.label)
+        
+        # verificar si en el grafo hay una arista de color 'rgba(254, 20, 56, 0.5)'
+        for edge in edges:
+            if edge.color == 'rgba(254, 20, 56, 0.5)':
+                salida = True
+            else:
+                salida = bipartite.is_bipartite(G)
+        return salida
+    
+    def esBipartitoConexoOdisconexo(self, nodes, edges) -> str:
+        # Crear el grafo con networkx
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            if edge.color != 'rgba(254, 20, 56, 0.5)':  # Solo agregar las aristas que no tienen este color
+                G.add_edge(edge.source, edge.to, weight=edge.label)
+
+        # Verificar si el grafo es bipartito
+        if not bipartite.is_bipartite(G):
+            return "El grafo no es bipartito."
+
+        # Verificar si el grafo no está vacío (tiene nodos) antes de comprobar la conectividad
+        if len(G) == 0:
+            return "El grafo está vacío."
+
+        # Verificar si el grafo es conexo o disconexo
+        if is_connected(G):
+            return "El grafo es bipartito y conexo."
+        else:
+            return "El grafo es bipartito y disconexo."
+        
+    def esBipartitoConexo(self, nodes, edges) -> bool:
+        # Crear el grafo con networkx
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            G.add_edge(edge.source, edge.to, weight=edge.label)
+        for edge in edges:
+            if edge.color == 'rgba(254, 20, 56, 0.5)':
+                return False
+            else:
+                return bipartite.is_bipartite(G)
+    
+    def simular_eliminacion_de_aristas(grafo, aristas_para_eliminar):
+        # Crear una copia del grafo para no alterar el original
+        grafo_temporal = grafo.copy()
+        grafo_temporal.remove_edges_from(aristas_para_eliminar)
+    
+        # Verificar si el grafo ahora está desconectado
+        componentes_despues_de_eliminar = list(nx.connected_components(grafo_temporal))
+        esta_desconectado = len(componentes_despues_de_eliminar) > 1
+        return esta_desconectado, componentes_despues_de_eliminar
+
+
+
+
+
+    
