@@ -79,8 +79,11 @@ svg {
   border-color: #64d368; /* Cambio el color del borde al pasar el cursor sobre el botón */
 }
 
-
 .st-emotion-cache-16txtl3 {
   padding: 6rem 1.5rem;
   background-color: black;
+}
+
+[data-testid= stAppViewContainer]{
+  background-color: #3d3f3d;
 }

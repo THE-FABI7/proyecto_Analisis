@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from streamlit_agraph import agraph, Node, Edge, Config
 import random
 
+<<<<<<< HEAD
 
 def main():
     # Carga los estilos CSS directamente en el archivo Python
@@ -401,3 +402,8 @@ def grafo_dirigido():
 
 if __name__ == "__main__":
     main()
+=======
+if __name__ == "__main__":
+    ui_manager = UIManager()
+    ui_manager.run()
+>>>>>>> 8b5ffc3d118f2a3366da72c333c22afbc6e4dd49
