@@ -19,18 +19,42 @@ class UIManager:
         with open('styles.css', 'r') as css:
             st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
 
+    def display_graph(self, graph):
+        if graph is not None and len(graph.nodes) > 0:
+            # Intenta obtener la etiqueta de cada nodo y asigna una predeterminada si no existe
+            nodes = [Node(id=str(n), label=graph.nodes[n].get('label', f'Node {n}')) for n in graph.nodes()]
+            edges = [Edge(source=str(u), target=str(v), label=str(graph.edges[u, v].get('weight', 1))) for u, v in graph.edges()]
+            agraph(nodes=nodes, edges=edges, config=Config(width=800, height=600))
+            st.session_state.show_graph = False
+        else:
+            # Aquí puedes manejar el caso en el que el grafo es nulo o está vacío
+            st.error("No hay un grafo para mostrar.")
+
     def run(self):
         # Método para iniciar la aplicación y el menú de Streamlit
         # Aquí iría la lógica para mostrar opciones en la barra lateral, manejar la entrada del usuario,
         # y llamar a los métodos correspondientes en GraphManager y GraphExporter basado en esas entradas.
+         # Cargar estilos CSS y otras inicializaciones
         self.load_css()
+        self.initialize_state()
+        self.handle_sidebar()
 
-        # Inicializa 'nodes' y 'edges' al principio de este método
+    def initialize_state(self):
+        # Inicializar los nodos y aristas si aún no están en st.session_state
         if 'nodes' not in st.session_state:
-            st.session_state.nodes = []
+            st.session_state['nodes'] = []
         if 'edges' not in st.session_state:
-            st.session_state.edges = []
+            st.session_state['edges'] = []
+        if 'graph' not in st.session_state:
+            st.session_state['graph'] = None
+        if 'show_graph' not in st.session_state:
+            st.session_state.show_graph = False
+        if 'graph_updated' not in st.session_state:
+            st.session_state.graph_updated = False
+    
+                
 
+    def handle_sidebar(self):
         if st.sidebar.button('Inicio'):
             st.experimental_rerun()
 
@@ -42,7 +66,7 @@ class UIManager:
         ejecutar_options = ["procesos"]
         ventana_options = ["Gráfica", "Tabla"]
         ayuda_options = ["Ayuda", "Acerca de Grafos"]
-    # Usa un archivo de imagen y muéstralo en el encabezado de la barra lateral usando st.image.
+        # Usa un archivo de imagen y muéstralo en el encabezado de la barra lateral usando st.image.
         st.sidebar.markdown(
             f'<img src="https://www.ucaldas.edu.co/portal/wp-content/uploads/2020/05/monitorias-1.jpg" width="150" class="my-sidebar-image">', unsafe_allow_html=True)
 
@@ -52,28 +76,9 @@ class UIManager:
             archivo_selection = st.sidebar.selectbox("Opciones", archivo_options)
 
             if archivo_selection == "nuevo grafo":
-                tipo_grafo_options = ["personalizado", "Aleatorio"]
-                tipo_grafo = st.sidebar.selectbox(
-                    "Tipo de grafo", tipo_grafo_options)
-                
-                if tipo_grafo == "personalizado":
-                    self.graph_manager.nuevo_grafo_personalizado()
-                    
-                else:
-                    tipo_grafo_aleatorio = ["completo",
-                                        "dirigido", "ponderado", "random"]
-                    tipo_grafoaleatorio_option = st.sidebar.selectbox(
-                        "Tipo de grafo aleatorio", tipo_grafo_aleatorio)
-                    
-                    if tipo_grafoaleatorio_option == "completo":
-                        self.graph_manager.grafo_completo()
-                        
-                    elif tipo_grafoaleatorio_option == "dirigido":
-                        self.graph_manager.grafo_dirigido()
-                        
-                    elif tipo_grafoaleatorio_option == "random":
-                        self.graph_manager.nuevo_grafo_aleatorio()
-                        
+
+                self.handle_new_graph()
+                 
 
             if archivo_selection == "Abrir":
 
@@ -148,7 +153,20 @@ class UIManager:
         elif navbar_selection == "Ejecutar":
             archivo_selection = st.sidebar.selectbox("Opciones", ejecutar_options)
             if archivo_selection == "procesos":
-                st.write("Has seleccionado la Sub opción 1")
+                st.write("Has seleccionado la Sub opción de procesos")
+                selected_sub_option = st.selectbox(
+                    "Seleccionar un proceso:",
+                    ["¿El grafo es bipartito?", "¿El grafo es bipartito conexo ó disconexo?"]
+                )
+                if selected_sub_option == "¿El grafo es bipartito?":
+                    if  self.graph_manager.esBipartito(st.session_state.nodes, st.session_state.edges):
+                        st.text("El grafo es bipartito")
+                    else:
+                        st.text("El grafo no es bipartito")
+                elif selected_sub_option == "¿El grafo es bipartito conexo ó disconexo?":
+                    salida = self.graph_manager.esBipartitoConexoOdisconexo(st.session_state.nodes, st.session_state.edges)
+                    st.text(salida)
+
 
         elif navbar_selection == "Ventana":
             archivo_selection = st.sidebar.selectbox("Opciones", ventana_options)
@@ -168,3 +186,42 @@ class UIManager:
                 st.write("Has seleccionado la Sub opción 1")
             if archivo_selection == "Acerca de Grafos":
                 self.graph_manager.acerca_de_grafos()
+
+    def handle_new_graph(self):
+        tipo_grafo_options = ["personalizado", "Aleatorio", "Bipartito"]
+        tipo_grafo = st.sidebar.selectbox("Tipo de grafo", tipo_grafo_options)
+                
+        
+                    
+        if tipo_grafo == 'Aleatorio':
+            tipo_grafo_aleatorio = ["completo",
+                                        "dirigido", "ponderado", "random"]
+            tipo_grafoaleatorio_option = st.sidebar.selectbox(
+                        "Tipo de grafo aleatorio", tipo_grafo_aleatorio)
+                    
+            if tipo_grafoaleatorio_option == "completo":
+                nodes, edges = self.graph_manager.grafo_completo()
+                if nodes is not None and edges is not None:
+                    self.display_graph(st.session_state.graph)
+                        
+            elif tipo_grafoaleatorio_option == "dirigido":
+                nodes, edges = self.graph_manager.grafo_dirigido()
+                if nodes is not None and edges is not None:
+                    self.display_graph(st.session_state.graph)
+                        
+            elif tipo_grafoaleatorio_option == "random":
+                self.graph_manager.nuevo_grafo_aleatorio()
+        
+        if tipo_grafo == "personalizado":
+            self.graph_manager.nuevo_grafo_personalizado2()
+
+        elif tipo_grafo == 'Bipartito':
+            numNodosGrupo1 = st.sidebar.number_input("Número de nodos en Grupo 1", min_value=1, value=5)
+            numNodosGrupo2 = st.sidebar.number_input("Número de nodos en Grupo 2", min_value=1, value=5)
+
+            # Llamando a la función para crear un grafo bipartito
+            self.graph_manager.GrafoBipartito(numNodosGrupo1, numNodosGrupo2)
+            # Guarda el nuevo grafo en el estado de la sesión y lo muestra
+            st.session_state['graph'] = self.graph_manager.get_graph()
+            self.display_graph(st.session_state['graph'])
+    

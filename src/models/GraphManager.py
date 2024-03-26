@@ -4,10 +4,15 @@ import streamlit as st
 import json
 import networkx as nx
 import matplotlib.pyplot as plt
+from networkx.algorithms import bipartite
 from streamlit_agraph import agraph, Node, Edge, Config
 import random
 import networkx as nx
 import io
+from networkx.algorithms.components import is_connected
+
+from .NodeManager import NodeManager
+from .EdgeManager import EdgeManager
 
 class GraphManager:
     def __init__(self):
@@ -15,6 +20,9 @@ class GraphManager:
         if 'graph' not in st.session_state:
             st.session_state['graph'] = nx.Graph()
         self.graph = st.session_state['graph']
+        self.node_manager = NodeManager(self.graph)
+        self.edge_manager = EdgeManager(self.graph)
+
 
     def actualizar_estado_session(self):
         # Actualiza st.session_state con la información actual del grafo
@@ -35,7 +43,7 @@ class GraphManager:
     # Metodo para crear un grafo personalizado
 
 
-    def nuevo_grafo_personalizado(self):
+    def grafo_personalizado(self):
         st.sidebar.title("Crear nuevo grafo")
         node_id = st.sidebar.text_input("ID del nodo")
         node_label = st.sidebar.text_input("Etiqueta del nodo")
@@ -146,6 +154,24 @@ class GraphManager:
                         nodeHighlightBehavior=True,  physics=False)
         agraph(nodes=st.session_state['personalizado_nodes'],
             edges=st.session_state['personalizado_edges'], config=config)
+        
+    def nuevo_grafo_personalizado2(self):
+        # Usar node_manager y edge_manager para gestionar nodos y aristas
+        self.node_manager.gestionar_nodos()
+        self.edge_manager.gestionar_aristas()
+        self._dibujar_grafo()
+
+    
+    
+    
+    def _dibujar_grafo(self):
+        # Dibuja el grafo utilizando los nodos y aristas gestionados por las clases auxiliares.
+        if 'nodes' in st.session_state and 'edges' in st.session_state:
+            agraph(nodes=st.session_state['nodes'], edges=st.session_state['edges'], 
+                   config=Config(width=900, height=900, directed=False, 
+                                  nodeHighlightBehavior=True, physics=False))
+
+
 
     # Metoddo para abrir el grafo
     def abrir_grafo(self):
@@ -213,7 +239,7 @@ class GraphManager:
         st.write("acerca_de_grafos")
         st.write("Grafos es una aplicación que permite crear, editar y visualizar grafos. Esta aplicación fue desarrollada por estudiantes de la Universidad de Caldas como proyecto final para la asignatura de Analisis y Diseño de algoritmos.")
         st.write("Integrantes:")
-        st.write("Fabian Alberto Guancha vera")
+        st.write("Fabian Alberto Guancha vera y Erley Jhovan Cabrera")
 
     # TODO:hay un problema a el momento de dar click sobre un nodo, se desaparece y renderiza un nuevo grafo
     def nuevo_grafo_aleatorio(self):
@@ -245,18 +271,28 @@ class GraphManager:
             st.session_state.graph = G
 
             # Convierte el grafo en una lista de nodos y aristas para streamlit_agraph
-            nodes = [Node(str(i), label=G.nodes[i]['label'], color="green", font={"color": "white"}) for i in G.nodes]
-            edges = [Edge(str(edge[0]), str(edge[1]), label=str(G.edges[edge]['weight'])) for edge in G.edges]
+            nodes = [
+                Node(str(i), label=f"Node {i}", color="green", font={"color": "white"})
+                for i in G.nodes
+            ]
+            edges = [
+                Edge(str(u), str(v), label=str(G.edges[u, v]['weight']))
+                for u, v in G.edges
+            ]
 
             # Actualiza el estado de la sesión con los nuevos nodos y aristas
             st.session_state['nodes'] = nodes
             st.session_state['edges'] = edges
 
             # Crea un objeto de configuración
-            config = Config(width=2000, height=500, directed=False, nodeHighlightBehavior=True, highlightColor="#F7A7A6", physics=False)
-
+            config = st.session_state.get(
+                'config',
+                Config(width=500, height=800, directed=False, nodeHighlightBehavior=True, highlightColor="#F7A7A6", physics=False)
+            )
+            st.session_state['config'] = config
             # Dibuja el grafo
             agraph(nodes=nodes, edges=edges, config=config)
+            self.guardarCambios()
 
 
     def grafo_completo(self):
@@ -267,6 +303,8 @@ class GraphManager:
         if st.button('Generar nuevo grafo completo'):
             # Crea un grafo completo
             G = nx.complete_graph(num_nodes)
+            for i in G.nodes():
+                G.nodes[i]['label'] = f'Node {i}'
 
             # Almacena el grafo generado en st.session_state.graph
             st.session_state.graph = G
@@ -279,13 +317,12 @@ class GraphManager:
             st.session_state['nodes'] = nodes
             st.session_state['edges'] = edges
 
-            # Crea un objeto de configuración
-            config = Config(width=2000, height=500, directed=False, nodeHighlightBehavior=True, highlightColor="#F7A7A6", physics=False)
+            self.guardarCambios()
 
-            # Dibuja el grafo
-            agraph(nodes=nodes, edges=edges, config=config)
+            return nodes, edges
+        return None, None
 
-
+            
     def grafo_dirigido(self):
         # Pregunta al usuario por el número de nodos
         num_nodos = st.number_input('Número de nodos', min_value=1, value=5)
@@ -300,7 +337,7 @@ class GraphManager:
         # Almacena el grafo generado en st.session_state.graph
         st.session_state.graph = G
 
-        # Convierte el grafo en una lista de nodos y aristas para strreamlit_agraph
+       # Convertir el grafo en una lista de nodos y aristas para streamlit_agraph
         nodes = [Node(str(node), label=f"Node {node}", font={"color": "white"}) for node in G.nodes]
         edges = [Edge(source=str(u), target=str(v), label="1") for u, v in G.edges]
 
@@ -308,38 +345,72 @@ class GraphManager:
         st.session_state['nodes'] = nodes
         st.session_state['edges'] = edges
 
-        # Configura y muestra el grafo en la interfaz de usuario
-        config = Config(height=500, width=500, nodeHighlightBehavior=True, highlightColor="#F7A7A6", directed=True, physics=False)
-        agraph(nodes=nodes, edges=edges, config=config)
+        self.guardarCambios()
+
+        return nodes, edges
 
 
     def GrafoBipartito(self, numNodosGrupo1: int, numNodosGrupo2: int):
-        # Crear grafo bipartito completo
-        self.graph = nx.complete_bipartite_graph(numNodosGrupo1, numNodosGrupo2)
 
-        # Agregar etiquetas y colores a los nodos
-        for i, node in enumerate(self.graph.nodes()):
-            grupo = 'Grupo 1' if self.graph.nodes[node]['bipartite'] == 0 else 'Grupo 2'
-            self.graph.nodes[node]['label'] = f'Nodo {i + 1} ({grupo})'
-            self.graph.nodes[node]['color'] = 'skyblue' if grupo == 'Grupo 1' else 'lightgreen'
+        G = nx.complete_bipartite_graph(numNodosGrupo1, numNodosGrupo2)
 
-        # Agregar pesos aleatorios a las aristas
-        for u, v in self.graph.edges():
-            self.graph.edges[u, v]['weight'] = random.randint(1, 100)
+        for i, (node, data) in enumerate(G.nodes(data=True)):
+            grupo = 0 if i < numNodosGrupo1 else 1
+            G.nodes[node]['label'] = f'Nodo {i + 1}'
+            G.nodes[node]['color'] = 'skyblue' if grupo == 0 else 'lightgreen'
+        
+        for u, v, data in G.edges(data=True):
+            G.edges[u, v]['weight'] = random.randint(1, 100)
+            G.edges[u, v]['color'] = 'gray'
 
-        # Actualizar el estado de la sesión para reflejar los cambios en el grafo
-        self.actualizar_estado_session()
+        nodes = [Node(id=str(node), label=G.nodes[node]['label'], color=G.nodes[node]['color']) for node in G.nodes()]
+        edges = [Edge(source=str(u), target=str(v), label=str(G.edges[u, v]['weight']), color=G.edges[u, v]['color']) for u, v in G.edges()]
 
-        # Preparar nodos y aristas para visualización
-        nodes = [Node(id=str(n), label=self.graph.nodes[n]['label'], color=self.graph.nodes[n]['color']) for n in self.graph.nodes()]
-        edges = [Edge(source=str(u), target=str(v), label=str(self.graph.edges[u, v]['weight'])) for u, v in self.graph.edges()]
+        # Actualiza el estado de la sesión con los nuevos nodos y aristas
+        st.session_state.graph = G
+        st.session_state['nodes'] = nodes
+        st.session_state['edges'] = edges
 
-        # Retornar nodos y aristas para visualización
+        # Configuración de la visualización del grafo
+        config = Config(height=600, width=800, directed=False, nodeHighlightBehavior=True, highlightColor="#F7A7A6", physics=True)
+
+        # Dibujar el grafo
+        agraph(nodes=nodes, edges=edges, config=config)
+
+        self.guardarCambios()
+
         return nodes, edges
+
+
+    #@staticmethod
+    #def asignarColorArista(peso):
+        #if peso >= 0 and peso <= 20:
+            #return "blue"
+        #elif peso > 20 and peso <= 40:
+            #return "green"
+        #elif peso > 40 and peso <= 60:
+            #return "yellow"
+        #elif peso > 60 and peso <= 80:
+            #return "orange"
+        #elif peso > 80:
+            #return "red"
+        #else:
+            #return "gray"#
 
 
     def get_graph(self):
         return self.graph
+    
+    def guardarCambios(self):
+        # Muestra un botón "Guardar Cambios" después de generar el grafo
+            if st.button('Guardar Cambios'):
+            # Aquí puedes realizar cualquier operación necesaria antes de recargar
+            # Por ejemplo, asegurarte de que todos los cambios en el grafo se han aplicado
+            # y están reflejados en st.session_state
+
+            # Recargar la página para mostrar los grafos cargados
+                st.experimental_rerun()
+
     
     def buscarNodo(self, st):
         selectedNodoBuscar = st.sidebar.selectbox("Buscar Nodo:", [node.label for node in st.session_state.nodes])
@@ -356,19 +427,6 @@ class GraphManager:
                 st.warning("No se ha seleccionado ningún nodo.")
     
     
-    def asignarColorArista(peso):
-        if peso >= 0 and peso <= 50:
-            return "blue"
-        elif peso > 50 and peso <= 100:
-            return "black"
-        elif peso > 100 and peso <= 150:
-            return "yellow"
-        elif  peso > 150 and peso <= 200:
-            return "purple"
-        elif peso > 200 and peso <= 250:
-            return "red"
-        else:
-            return "white"
     
     
     def mostrarGrafoTabla(self, nodes, edges, st):
@@ -407,3 +465,58 @@ class GraphManager:
         # plt.figure(figsize=(10, 5))
         # nx.draw(G, with_labels=True)
         # st.pyplot()
+
+    def esBipartito(self, nodes, edges) -> bool:
+        # Crear el grafo con networkx
+        salida = False
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            G.add_edge(edge.source, edge.to, weight=edge.label)
+        
+        # verificar si en el grafo hay una arista de color 'rgba(254, 20, 56, 0.5)'
+        for edge in edges:
+            if edge.color == 'rgba(254, 20, 56, 0.5)':
+                salida = True
+            else:
+                salida = bipartite.is_bipartite(G)
+        return salida
+    
+    def esBipartitoConexoOdisconexo(self, nodes, edges) -> str:
+        # Crear el grafo con networkx
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            if edge.color != 'rgba(254, 20, 56, 0.5)':  # Solo agregar las aristas que no tienen este color
+                G.add_edge(edge.source, edge.to, weight=edge.label)
+
+        # Verificar si el grafo es bipartito
+        if not bipartite.is_bipartite(G):
+            return "El grafo no es bipartito."
+
+        # Verificar si el grafo no está vacío (tiene nodos) antes de comprobar la conectividad
+        if len(G) == 0:
+            return "El grafo está vacío."
+
+        # Verificar si el grafo es conexo o disconexo
+        if is_connected(G):
+            return "El grafo es bipartito y conexo."
+        else:
+            return "El grafo es bipartito y disconexo."
+        
+    def esBipartitoConexo(self, nodes, edges) -> bool:
+        # Crear el grafo con networkx
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            G.add_edge(edge.source, edge.to, weight=edge.label)
+        for edge in edges:
+            if edge.color == 'rgba(254, 20, 56, 0.5)':
+                return False
+            else:
+                return bipartite.is_bipartite(G)
+
+    
