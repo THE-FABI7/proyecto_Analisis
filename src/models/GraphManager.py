@@ -370,7 +370,7 @@ class GraphManager:
         st.session_state['edges'] = edges
 
         # Configuración de la visualización del grafo
-        config = Config(height=600, width=800, directed=False, nodeHighlightBehavior=True, highlightColor="#F7A7A6", physics=True)
+        config = Config(height=600, width=800, directed=False, nodeHighlightBehavior=True, highlightColor="#F7A7A6", physics=False)
 
         # Dibujar el grafo
         agraph(nodes=nodes, edges=edges, config=config)
