@@ -190,9 +190,7 @@ class UIManager:
     def handle_new_graph(self):
         tipo_grafo_options = ["personalizado", "Aleatorio", "Bipartito"]
         tipo_grafo = st.sidebar.selectbox("Tipo de grafo", tipo_grafo_options)
-                
-        
-                    
+                        
         if tipo_grafo == 'Aleatorio':
             tipo_grafo_aleatorio = ["completo",
                                         "dirigido", "ponderado", "random"]

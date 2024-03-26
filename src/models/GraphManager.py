@@ -42,7 +42,6 @@ class GraphManager:
     # TODO: hay un problema a el momento de actulizar un nodo, se desaparecen las aristas relacionadas
     # Metodo para crear un grafo personalizado
 
-
     def grafo_personalizado(self):
         st.sidebar.title("Crear nuevo grafo")
         node_id = st.sidebar.text_input("ID del nodo")
@@ -155,14 +154,13 @@ class GraphManager:
         agraph(nodes=st.session_state['personalizado_nodes'],
             edges=st.session_state['personalizado_edges'], config=config)
         
+
     def nuevo_grafo_personalizado2(self):
         # Usar node_manager y edge_manager para gestionar nodos y aristas
         self.node_manager.gestionar_nodos()
         self.edge_manager.gestionar_aristas()
         self._dibujar_grafo()
 
-    
-    
     
     def _dibujar_grafo(self):
         # Dibuja el grafo utilizando los nodos y aristas gestionados por las clases auxiliares.
@@ -518,5 +516,3 @@ class GraphManager:
                 return False
             else:
                 return bipartite.is_bipartite(G)
-
-    

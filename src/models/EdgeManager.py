@@ -125,17 +125,14 @@ class EdgeManager:
                 if st.button("Marcar arista como eliminada", key="delete_edge_button"): 
                     # Encuentra la arista seleccionada basándose en el índice
                     selected_edge = st.session_state.edges[selected_index]
-
+    
                     # Cambiar visualmente la arista seleccionada para indicar que ha sido "eliminada"
+                    selected_edge.dashes = True
                     # Aquí cambiamos el color a gris y agregamos "(eliminada)" a la etiqueta
                     selected_edge.color = "#CCCCCC"  # Usar un color gris
-                    selected_edge.label += " (eliminada)"  # Añadir nota a la etiqueta
+                    # selected_edge.label += "(el)"  # Añadir nota a la etiqueta
                 
                     st.success(f"Arista {selected_edge.source} -> {selected_edge.to} marcada como eliminada.")
 
             else:
                 st.warning("No hay aristas para eliminar.")
-
-
-
-
