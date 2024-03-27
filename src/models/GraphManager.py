@@ -169,8 +169,6 @@ class GraphManager:
                    config=Config(width=900, height=900, directed=False, 
                                   nodeHighlightBehavior=True, physics=False))
 
-
-
     # Metoddo para abrir el grafo
     def abrir_grafo(self):
         uploaded_file = st.file_uploader("Elige un archivo .json", type="json")
@@ -423,8 +421,6 @@ class GraphManager:
                 
             else:
                 st.warning("No se ha seleccionado ningún nodo.")
-    
-    
     
     
     def mostrarGrafoTabla(self, nodes, edges, st):

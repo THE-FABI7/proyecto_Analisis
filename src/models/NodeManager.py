@@ -25,7 +25,7 @@ class NodeManager:
                 if node_id in [node.id for node in st.session_state['nodes']]:
                     st.error("El ID del nodo ya existe.")
                 else:
-                    nodo = Node(id=node_id, label=node_label, color=node_color)
+                    nodo = Node(id=node_id, label=node_label, color=node_color, size=16)
                     st.session_state['nodes'].append(nodo)
                     self.graph.add_node(node_id, label=node_label, color=node_color)
                     st.success("Nodo agregado correctamente.")
