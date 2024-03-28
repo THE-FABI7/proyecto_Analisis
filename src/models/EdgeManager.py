@@ -136,3 +136,19 @@ class EdgeManager:
 
             else:
                 st.warning("No hay aristas para eliminar.")
+    
+    
+    @staticmethod
+    def asignarColorArista(peso):
+     if peso >= 0 and peso <= 20:
+         return "blue"
+     elif peso > 20 and peso <= 40:
+         return "green"
+     elif peso > 40 and peso <= 60:
+         return "yellow"
+     elif peso > 60 and peso <= 80:
+         return "orange"
+     elif peso > 80:
+         return "red"
+     else:
+         return "gray"#
