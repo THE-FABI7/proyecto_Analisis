@@ -159,9 +159,9 @@ class GraphManager:
         agraph(nodes=st.session_state['personalizado_nodes'],
                edges=st.session_state['personalizado_edges'], config=config)
 
-    def nuevo_grafo_personalizado2(self):
+    def nuevo_grafo_personalizado2(self, st):
         # Usar node_manager y edge_manager para gestionar nodos y aristas
-        self.node_manager.gestionar_nodos()
+        self.node_manager.gestionar_nodos(st)
         self.edge_manager.gestionar_aristas()
         self._dibujar_grafo()
 

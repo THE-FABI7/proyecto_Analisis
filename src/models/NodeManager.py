@@ -10,11 +10,11 @@ class NodeManager:
         if 'edges' not in st.session_state:
             st.session_state['edges'] = []
 
-    def gestionar_nodos(self):
+    def gestionar_nodos(self,st):
         with st.sidebar:
             self.agregar_nodo()
-            self.editar_nodo()
-            self.eliminar_nodo()
+            self.editar_nodo(st)
+            self.eliminar_nodo(st)
 
     def agregar_nodo(self):
         node_id = st.text_input("ID del nodo", key="add_node_id")
@@ -32,7 +32,7 @@ class NodeManager:
             else:
                 st.error("El ID y la etiqueta del nodo son obligatorios.")
 
-    def editar_nodo(self):
+    def editar_nodo(self, st):
         if st.session_state['nodes']:
             node_ids = [node.id for node in st.session_state['nodes']]
             selected_node_id = st.selectbox("Seleccionar nodo a editar:", node_ids, key="edit_node_select")
@@ -47,7 +47,7 @@ class NodeManager:
                         self.graph.nodes[selected_node_id]['color'] = new_color
                         st.success(f"Nodo {selected_node_id} actualizado.")
 
-    def eliminar_nodo(self):
+    def eliminar_nodo(self, st):
         if st.session_state['nodes']:
             node_ids = [node.id for node in st.session_state['nodes']]
             selected_node_id = st.selectbox("Seleccionar nodo a eliminar:", node_ids, key="delete_node_select")
