@@ -330,7 +330,7 @@ class GraphManager:
             # Crea un grafo completo
             G = nx.complete_graph(num_nodes)
             for i in G.nodes():
-                G.nodes[i]['label'] = f'Node {i}'
+                G.nodes[i]['label'] = f'{i}'
 
             # Almacena el grafo generado en st.session_state.graph
             st.session_state.graph = G
@@ -338,7 +338,7 @@ class GraphManager:
             # Convierte el grafo en una lista de nodos y aristas para streamlit_agraph
             nodes = [Node(str(i), label=f"Node {i}", color="green", font={
                           "color": "white"}) for i in G.nodes]
-            edges = [Edge(source=str(u), target=str(v), label="1")
+            edges = [Edge(source=str(u), target=str(v), label="10")
                      for u, v in G.edges]
 
             # Actualiza el estado de la sesión con los nuevos nodos y aristas
@@ -424,22 +424,6 @@ class GraphManager:
 
             # Recargar la página para mostrar los grafos cargados
             st.experimental_rerun()
-
-    def buscarNodo(self, st):
-        selectedNodoBuscar = st.sidebar.selectbox(
-            "Buscar Nodo:", [node.label for node in st.session_state.nodes])
-
-        if st.sidebar.button("Buscar Nodo"):
-            # Lógica para buscar el nodo seleccionado
-            nodoBuscar = next(
-                (node for node in st.session_state.nodes if node.label == selectedNodoBuscar), None)
-
-            if nodoBuscar:
-                nodoBuscar.color = "white"
-                st.success("Allado!")
-
-            else:
-                st.warning("No se ha seleccionado ningún nodo.")
 
     def mostrarGrafoTabla(self, nodes, edges, st):
         # Crear el grafo con networkx

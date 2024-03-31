@@ -155,8 +155,9 @@ class UIManager:
                 st.write("Has seleccionado la Sub opción 1")
             if archivo_selection == "Nodo":
                 st.sidebar.header("Nodos Edit")
+                self.node_manager.agregar_nodo()
                 self.node_manager.editar_nodo(st)
-                self.graph_manager.buscarNodo(st)
+                self.node_manager.buscarNodo(st)
                 self.node_manager.eliminar_nodo(st)
             if archivo_selection == "Arco":
                 st.write("Has seleccionado la Sub opción arco")
