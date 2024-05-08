@@ -57,7 +57,6 @@ class EdgeManager:
     
     def editarArista(self):
         with st.sidebar:
-            print("Entra a editar arista")
             if 'selected_edge_index' not in st.session_state:
                 st.session_state['selected_edge_index'] = 0
 

@@ -9,6 +9,7 @@ import random
 from src.models.GraphExporter import GraphExporter
 from src.models.GraphManager import GraphManager
 from src.models.NodeManager import NodeManager
+from src.models.EdgeManager import EdgeManager
 
 
 class UIManager:
@@ -17,6 +18,7 @@ class UIManager:
         self.graph_manager = GraphManager()
         graph = self.graph_manager.get_graph()
         self.node_manager = NodeManager(graph)
+        self.edge_manager = EdgeManager(graph)
         self.exporter = GraphExporter()
 
     def load_css(self):
@@ -160,7 +162,10 @@ class UIManager:
                 self.node_manager.buscarNodo(st)
                 self.node_manager.eliminar_nodo(st)
             if archivo_selection == "Arco":
-                st.write("Has seleccionado la Sub opción arco")
+                st.sidebar.header("Arco Edit")
+                self.edge_manager.gestionar_aristas()
+                self.edge_manager.editarArista()
+                self.edge_manager.eliminarArista()
 
         elif navbar_selection == "Ejecutar":
             archivo_selection = st.sidebar.selectbox(
