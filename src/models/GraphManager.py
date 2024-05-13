@@ -202,6 +202,10 @@ class GraphManager:
             config = Config(width=1000, height=500, directed=False,
                         nodeHighlightBehavior=True,  physics=False)
             agraph(nodes=nodes, edges=edges, config=config)
+            return json_data
+        return None
+        
+
 
 
     def importar_datos(self):
@@ -382,20 +386,20 @@ class GraphManager:
         return nodes, edges
 
 
-    #@staticmethod
-    #def asignarColorArista(peso):
-        #if peso >= 0 and peso <= 20:
-            #return "blue"
-        #elif peso > 20 and peso <= 40:
-            #return "green"
-        #elif peso > 40 and peso <= 60:
-            #return "yellow"
-        #elif peso > 60 and peso <= 80:
-            #return "orange"
-        #elif peso > 80:
-            #return "red"
-        #else:
-            #return "gray"#
+    @staticmethod
+    def asignarColorArista(peso):
+        if peso >= 0 and peso <= 20:
+            return "blue"
+        elif peso > 20 and peso <= 40:
+            return "green"
+        elif peso > 40 and peso <= 60:
+            return "yellow"
+        elif peso > 60 and peso <= 80:
+            return "orange"
+        elif peso > 80:
+            return "red"
+        else:
+            return "gray"
 
 
     def get_graph(self):

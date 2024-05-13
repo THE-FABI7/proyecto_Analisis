@@ -8,6 +8,7 @@ from streamlit_agraph import agraph, Node, Edge, Config
 import random
 from src.models.GraphExporter import GraphExporter
 from src.models.GraphManager import GraphManager
+from src.Probabilidades.StateGraph import StateGraph
 
 class UIManager:
     
@@ -63,7 +64,7 @@ class UIManager:
         archivo_options = ["nuevo grafo", "Abrir", "Cerrar", "Guardar",
                        "Guardar como", "Exportar datos", "Importar datos", "Salir"]
         editar_options = ["Deshacer", "Arco", "Nodo"]
-        ejecutar_options = ["procesos"]
+        ejecutar_options = ["procesos","probabilidades"]
         ventana_options = ["Gráfica", "Tabla"]
         ayuda_options = ["Ayuda", "Acerca de Grafos"]
         # Usa un archivo de imagen y muéstralo en el encabezado de la barra lateral usando st.image.
@@ -166,6 +167,35 @@ class UIManager:
                 elif selected_sub_option == "¿El grafo es bipartito conexo ó disconexo?":
                     salida = self.graph_manager.esBipartitoConexoOdisconexo(st.session_state.nodes, st.session_state.edges)
                     st.text(salida)
+            
+            if archivo_selection == "probabilidades":
+                st.write("Has seleccionado la opción de Probabilidades")
+                st.title("Simulador de Transiciones de Estado")
+                st.sidebar.header("Configuración de Estados Actuales")
+            
+                # Obtenemos el path al archivo JSON a través de GraphManager
+                datos_json = self.graph_manager.abrir_grafo()  # Esto debería retornar el path al archivo JSON
+
+                print(datos_json)
+            
+                if datos_json is not None:
+                    # Permitir al usuario definir los estados actuales de A, B, y C
+                    estado_a = st.sidebar.radio("Estado A", [0, 1], key="a")
+                    estado_b = st.sidebar.radio("Estado B", [0, 1], key="b")
+                    estado_c = st.sidebar.radio("Estado C", [0, 1], key="c")
+                    estados_actuales = [estado_a, estado_b, estado_c]
+
+                    datos_json = "Data/complete_bipartite_graph.json"  # Asumiendo que tienes un archivo JSON
+                    graph = StateGraph(datos_json)
+                    graph.cargar_datos()
+
+                    if st.sidebar.button("Simular Transiciones"):
+                        probabilidades = graph.simular_transiciones(estados_actuales)
+                        st.write(f"Resultado de la simulación para los estados [{estado_a}, {estado_b}, {estado_c}]: {probabilidades}")
+                        for i, prob in enumerate(probabilidades):
+                            st.write(f"Estado futuro {i}: {prob:.2f}")
+
+
 
 
         elif navbar_selection == "Ventana":
@@ -179,6 +209,7 @@ class UIManager:
 
         elif navbar_selection == "Herramientas":
             st.write("Has seleccionado la Sub opción 1")
+
 
         elif navbar_selection == "Ayuda":
             archivo_selection = st.sidebar.selectbox("Opciones", ayuda_options)

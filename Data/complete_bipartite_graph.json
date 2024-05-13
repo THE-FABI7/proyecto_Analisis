@@ -1,0 +1,93 @@
+{
+    "graph": [
+        {
+            "name": "Complete Bipartite Graph ABC / ABC",
+            "data": [
+                {
+                    "id": 1,
+                    "label": "A",
+                    "linkedTo": [
+                        {
+                            "nodeId": 5,
+                            "weight": 0.0
+                        },
+                        {
+                            "nodeId": 6,
+                            "weight": 0.5
+                        }
+                    ]
+                },
+                {
+                    "id": 2,
+                    "label": "B",
+                    "linkedTo": [
+                        {
+                            "nodeId": 4,
+                            "weight": 0.5
+                        },
+                        {
+                            "nodeId": 6,
+                            "weight": 0.5
+                        }
+                    ]
+                },
+                {
+                    "id": 3,
+                    "label": "C",
+                    "linkedTo": [
+                        {
+                            "nodeId": 4,
+                            "weight": 0.5
+                        },
+                        {
+                            "nodeId": 5,
+                            "weight": 0.25
+                        }
+                    ]
+                },
+                {
+                    "id": 4,
+                    "label": "A'",
+                    "linkedTo": [
+                        {
+                            "nodeId": 2,
+                            "weight": 0.5
+                        },
+                        {
+                            "nodeId": 3,
+                            "weight": 0.5
+                        }
+                    ]
+                },
+                {
+                    "id": 5,
+                    "label": "B'",
+                    "linkedTo": [
+                        {
+                            "nodeId": 1,
+                            "weight": 0.0
+                        },
+                        {
+                            "nodeId": 3,
+                            "weight": 0.25
+                        }
+                    ]
+                },
+                {
+                    "id": 6,
+                    "label": "C'",
+                    "linkedTo": [
+                        {
+                            "nodeId": 1,
+                            "weight": 0.5
+                        },
+                        {
+                            "nodeId": 2,
+                            "weight": 0.5
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

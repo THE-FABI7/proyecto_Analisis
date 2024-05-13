@@ -32,6 +32,19 @@ class NodeManager:
                     st.success("Nodo agregado correctamente.")
             else:
                 st.error("El ID y la etiqueta del nodo son obligatorios.")
+    
+    def agregar_nodo2(self, node_id, label, color):
+        """Agrega un nodo al grafo con ID, etiqueta y color especificados."""
+        if node_id and label:
+            if node_id in [node.id for node in st.session_state['nodes']]:
+                st.error("El ID del nodo ya existe.")
+            else:
+                nodo = Node(id=node_id, label=label, color=color)
+                st.session_state['nodes'].append(nodo)
+                self.graph.add_node(node_id, label=label, color=color)
+                st.success("Nodo agregado correctamente.")
+        else:
+            st.error("El ID y la etiqueta del nodo son obligatorios.")
 
     def editar_nodo(self):
         if st.session_state['nodes']:
