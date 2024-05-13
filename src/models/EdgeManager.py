@@ -135,6 +135,7 @@ class EdgeManager:
 
             else:
                 st.warning("No hay aristas para eliminar.")
+<<<<<<< HEAD
     
     
     @staticmethod
@@ -151,3 +152,23 @@ class EdgeManager:
          return "red"
      else:
          return "gray"#
+=======
+
+    def agregar_arista(self, from_node, to_node, weight):
+        with st.sidebar:
+            st.header("Gestionar Aristas")
+            source_node_id = st.selectbox("Nodo de inicio", [node.id for node in st.session_state.nodes], key="edge_start")
+            target_node_id = st.selectbox("Nodo de destino", [node.id for node in st.session_state.nodes], key="edge_end")
+            weight = st.number_input("Peso", min_value=1, max_value=1000, key="edge_weight")
+            edge_color = st.color_picker("Color de la arista", key="edge_color")
+
+            if st.button("Agregar Arista", key="add_edge"):
+                nueva_arista = Edge(source=source_node_id, target=target_node_id, weight=weight, label=str(weight), width=3, color=edge_color)
+                st.session_state.edges.append(nueva_arista)
+                self.graph.add_edge(source_node_id, target_node_id, weight=weight, color=edge_color)
+                st.success("Arista agregada correctamente.")
+
+
+
+
+>>>>>>> ramaErley
