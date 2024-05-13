@@ -41,6 +41,16 @@ class StateGraph:
         plt.show()
 
     def simular_transiciones(self, estados_actuales):
-        index = estados_actuales[0] * 4 + estados_actuales[1] * 2 + estados_actuales[2]
+        index = estados_actuales[2] * 4 + estados_actuales[1] * 2 + estados_actuales[0]
         probabilidades = self.transition_matrix[index]
         return probabilidades
+    
+    def estados_futuros_con_probabilidades(self, probabilidades):
+        estados_futuros_con_probabilidades = []
+        for i, probabilidad in enumerate(probabilidades):
+            if probabilidad > 0:  # Solo consideramos estados futuros con probabilidad no nula
+                # Asumiendo que el índice i está en el orden [C, B, A]
+                estado_futuro = [((i >> 0) & 1), ((i >> 1) & 1), ((i >> 2) & 1)]  # Corrige el orden aquí
+                estados_futuros_con_probabilidades.append((estado_futuro, probabilidad))
+    
+        return estados_futuros_con_probabilidades

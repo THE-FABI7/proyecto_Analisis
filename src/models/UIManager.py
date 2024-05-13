@@ -191,9 +191,11 @@ class UIManager:
 
                     if st.sidebar.button("Simular Transiciones"):
                         probabilidades = graph.simular_transiciones(estados_actuales)
+                        resultados = graph.estados_futuros_con_probabilidades(probabilidades)
                         st.write(f"Resultado de la simulación para los estados [{estado_a}, {estado_b}, {estado_c}]: {probabilidades}")
-                        for i, prob in enumerate(probabilidades):
-                            st.write(f"Estado futuro {i}: {prob:.2f}")
+                        for estado_futuro, probabilidad in resultados:
+                            st.write(f"Estado futuro {estado_futuro}: Probabilidad = {probabilidad:.2f}")
+                        
 
 
 
