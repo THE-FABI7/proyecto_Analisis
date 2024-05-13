@@ -11,15 +11,35 @@ class StateGraph:
         self.graph_manager = GraphManager()  # Si GraphManager tiene métodos estáticos, se puede omitir la instanciación
         self.datos_json = datos_json
         # La matriz combinada de transición para A, B, y C con dimensiones 8x8
-        self.transition_matrix = np.array([
-            [1, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0],
-            [0, 0, 0, 0, 0, 1, 0, 0],
-            [0, 1, 0, 0, 0, 0, 0, 0],
-            [0, 1, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 1],
-            [0, 0, 0, 0, 0, 1, 0, 0],
-            [0, 0, 0, 1, 0, 0, 0, 0]
+        self.transition_matrix_A = np.array([
+            [1, 0], 
+            [1, 0], 
+            [0, 1], 
+            [0, 1],
+            [0, 1], 
+            [0, 1], 
+            [0, 1], 
+            [0, 1]
+        ])
+        self.transition_matrix_B = np.array([
+            [1, 0], 
+            [1, 0], 
+            [1, 0], 
+            [1, 0],
+            [1, 0], 
+            [0, 1], 
+            [1, 0], 
+            [0, 1]
+        ])
+        self.transition_matrix_C = np.array([
+            [1, 0], 
+            [0, 1], 
+            [0, 1], 
+            [1, 0],
+            [1, 0], 
+            [0, 1], 
+            [0, 1], 
+            [1, 0]
         ])
 
 
@@ -40,17 +60,30 @@ class StateGraph:
         nx.draw_networkx_edge_labels(self.grafo, pos, edge_labels=labels)
         plt.show()
 
-    def simular_transiciones(self, estados_actuales):
-        index = estados_actuales[2] * 4 + estados_actuales[1] * 2 + estados_actuales[0]
-        probabilidades = self.transition_matrix[index]
-        return probabilidades
+    def simular_transiciones(self, estado_actual):
+        index = estado_actual[2] * 4 + estado_actual[1] * 2 + estado_actual[0]
+        prob_a = self.transition_matrix_A[index]
+        prob_b = self.transition_matrix_B[index]
+        prob_c = self.transition_matrix_C[index]
+        estado_futuro_a = 1 if prob_a[1] == 1 else 0
+        estado_futuro_b = 1 if prob_b[1] == 1 else 0
+        estado_futuro_c = 1 if prob_c[1] == 1 else 0
+        return {
+            'estado_actual': estado_actual,
+            'estados_futuros': {
+                'A': estado_futuro_a,
+                'B': estado_futuro_b,
+                'C': estado_futuro_c
+            },
+            'probabilidades': {
+                'A': prob_a,
+                'B': prob_b,
+                'C': prob_c
+            }
+        }
+
+    def obtener_estado_futuro_probabilidad(self, estado_actual):
+        resultado = self.simular_transiciones(estado_actual)
+        return resultado
     
-    def estados_futuros_con_probabilidades(self, probabilidades):
-        estados_futuros_con_probabilidades = []
-        for i, probabilidad in enumerate(probabilidades):
-            if probabilidad > 0:  # Solo consideramos estados futuros con probabilidad no nula
-                # Asumiendo que el índice i está en el orden [C, B, A]
-                estado_futuro = [((i >> 0) & 1), ((i >> 1) & 1), ((i >> 2) & 1)]  # Corrige el orden aquí
-                estados_futuros_con_probabilidades.append((estado_futuro, probabilidad))
     
-        return estados_futuros_con_probabilidades

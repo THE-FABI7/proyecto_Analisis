@@ -190,11 +190,13 @@ class UIManager:
                     graph.cargar_datos()
 
                     if st.sidebar.button("Simular Transiciones"):
-                        probabilidades = graph.simular_transiciones(estados_actuales)
-                        resultados = graph.estados_futuros_con_probabilidades(probabilidades)
-                        st.write(f"Resultado de la simulación para los estados [{estado_a}, {estado_b}, {estado_c}]: {probabilidades}")
-                        for estado_futuro, probabilidad in resultados:
-                            st.write(f"Estado futuro {estado_futuro}: Probabilidad = {probabilidad:.2f}")
+                        resultados = graph.obtener_estado_futuro_probabilidad(estados_actuales)
+
+                        st.write("## Resultados de la Simulación:")
+                        st.write(f"**Estado Actual:** {resultados['estado_actual']}")
+                        for nodo in ['A', 'B', 'C']:
+                            st.write(f"**Estado Futuro {nodo}:** {resultados['estados_futuros'][nodo]}")
+                            st.write(f"**Probabilidades de Transición para {nodo}:** {resultados['probabilidades'][nodo]}")
                         
 
 
