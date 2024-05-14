@@ -205,33 +205,28 @@ class GraphManager:
                             nodes.append(Node(id=linked_node_id, size=20,
                                               label=str(linked_node_id),
                                               type="circle", color="blue", shape=None))
+
             else:
 
-                for nodeData in json_data["nodes"]:
-                    # 20 es un valor por defecto para 'size'
-                    size = nodeData.get("size", 20)
-                    # 'green' es un valor por defecto para 'color'
-                    color = nodeData.get("color", "green")
-                    node_id = nodeData["id"]
-                    nodes.append(Node(id=node_id,
-                                      label=nodeData["label"],
-                                      size=size, color=color, shape=None,
-                                      # Coordenada x aleatoria
-                                      x=random.uniform(0, 900),
-                                      y=random.uniform(0, 900)))
-                for edgesData in json_data["edges"]:
-                    source_node_id = edgesData["source"]
-                    target_node_id = edgesData["target"]
-                    edges.append(Edge(source=source_node_id, target=target_node_id, label=str(edgesData["label"]),
-                                      width=3))
+                for node in json_data['graph'][0]['data']:
+                    nodes.append(
+                        Node(id=node['id'], label=node['label'], color="green", font={"color": "white"}))
+                    for linked_node in node['linkedTo']:
+                        edge_color = GraphManager.asignarColorArista(
+                            linked_node['weight'])
+                        edges.append(Edge(source=node['id'], target=linked_node['nodeId'], label=str(
+                            linked_node['weight']),  color=edge_color))
+                        # si las aristas no tienen peso el color de las aristas sea por defecto morado
+                        if linked_node['weight'] == "":
+                            edge_color = "purple"
+                            edges.append(Edge(source=node['id'], target=linked_node['nodeId'], label=str(
+                                linked_node['weight']),  color=edge_color))
 
             config = Config(width=1000, height=500, directed=False,
                             nodeHighlightBehavior=True,  physics=False)
             agraph(nodes=nodes, edges=edges, config=config)
             return json_data
         return None
-        
-
 
     def importar_datos(self):
         uploaded_file = st.file_uploader("Elige un archivo .txt", type="txt")
@@ -416,9 +411,6 @@ class GraphManager:
 
         return nodes, edges
 
-<<<<<<< HEAD
-=======
-
     @staticmethod
     def asignarColorArista(peso):
         if peso >= 0 and peso <= 20:
@@ -434,8 +426,6 @@ class GraphManager:
         else:
             return "gray"
 
-
->>>>>>> ramaErley
     def get_graph(self):
         return self.graph
 
