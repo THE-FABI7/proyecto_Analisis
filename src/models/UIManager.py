@@ -11,6 +11,7 @@ from src.models.GraphExporter import GraphExporter
 from src.models.GraphManager import GraphManager
 from src.models.NodeManager import NodeManager
 from src.models.EdgeManager import EdgeManager
+from src.Probabilidades.StateGraph import StateGraph
 
 
 class UIManager:
@@ -187,6 +188,49 @@ class UIManager:
                     salida = self.graph_manager.esBipartitoConexoOdisconexo(
                         st.session_state.nodes, st.session_state.edges)
                     st.text(salida)
+
+            if archivo_selection == "probabilidades":
+                st.write("Has seleccionado la opción de Probabilidades")
+                st.title("Simulador de Transiciones de Estado")
+                st.sidebar.header("Configuración de Estados Actuales")
+
+                # Obtenemos el path al archivo JSON a través de GraphManager
+                # Esto debería retornar el path al archivo JSON
+                datos_json = self.graph_manager.abrir_grafo()
+
+                print(datos_json)
+
+                if datos_json is not None:
+                    # Permitir al usuario definir los estados actuales de A, B, y C
+                    estado_a = st.sidebar.radio("Estado A", [0, 1], key="a")
+                    estado_b = st.sidebar.radio("Estado B", [0, 1], key="b")
+                    estado_c = st.sidebar.radio("Estado C", [0, 1], key="c")
+                    estados_actuales = [estado_a, estado_b, estado_c]
+
+                    # Asumiendo que tienes un archivo JSON
+                    datos_json = "Data/complete_bipartite_graph.json"
+                    graph = StateGraph(datos_json)
+                    graph.cargar_datos()
+
+                if st.sidebar.button("Simular Transiciones"):
+                    resultados = graph.obtener_estado_futuro_probabilidad(
+                        estados_actuales)
+
+                    st.write("## Resultados de la Simulación:")
+
+                    # Crear un nuevo DataFrame solo para mostrar en la interfaz
+                    datos_para_mostrar = pd.DataFrame({
+                        "Estado Actual": [resultados['Estado Actual'].iloc[0]],
+                        "Estado Futuro A": [resultados['Estado Futuro A'].iloc[0]],
+                        "Probabilidad A": [resultados['Probabilidad A'].iloc[0]],
+                        "Estado Futuro B": [resultados['Estado Futuro B'].iloc[0]],
+                        "Probabilidad B": [resultados['Probabilidad B'].iloc[0]],
+                        "Estado Futuro C": [resultados['Estado Futuro C'].iloc[0]],
+                        "Probabilidad C": [resultados['Probabilidad C'].iloc[0]]
+                    }, index=[0])
+
+                    # Mostrar el DataFrame con Streamlit
+                    st.dataframe(datos_para_mostrar)
 
         elif navbar_selection == "Ventana":
             archivo_selection = st.sidebar.selectbox(
