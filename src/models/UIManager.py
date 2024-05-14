@@ -217,7 +217,7 @@ class UIManager:
                         "Probabilidad C": [resultados['Probabilidad C'].iloc[0]]
                     }, index=[0])
 
-    # Mostrar el DataFrame con Streamlit
+                    # Mostrar el DataFrame con Streamlit
                     st.dataframe(datos_para_mostrar)
 
         elif navbar_selection == "Ventana":
