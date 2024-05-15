@@ -72,7 +72,7 @@ class UIManager:
         archivo_options = ["nuevo grafo", "Abrir", "Cerrar", "Guardar",
                            "Guardar como", "Exportar datos", "Importar datos", "Salir"]
         editar_options = ["Deshacer", "Arco", "Nodo"]
-        ejecutar_options = ["procesos", "probabilidades"]
+        ejecutar_options = ["procesos", "Estrategia1", "Estrategia2"]
         ventana_options = ["Gráfica", "Tabla"]
         ayuda_options = ["Ayuda", "Acerca de Grafos"]
         # Usa un archivo de imagen y muéstralo en el encabezado de la barra lateral usando st.image.
@@ -189,7 +189,7 @@ class UIManager:
                         st.session_state.nodes, st.session_state.edges)
                     st.text(salida)
 
-            if archivo_selection == "probabilidades":
+            if archivo_selection == "Estrategia1":
                 st.write("Has seleccionado la opción de Probabilidades")
                 st.title("Simulador de Transiciones de Estado")
                 st.sidebar.header("Configuración de Estados Actuales")
@@ -231,6 +231,9 @@ class UIManager:
 
                     # Mostrar el DataFrame con Streamlit
                     st.dataframe(datos_para_mostrar)
+
+            if archivo_selection == "Estrategia2":
+                st.write("Estrategia 2 en proceso")
 
         elif navbar_selection == "Ventana":
             archivo_selection = st.sidebar.selectbox(

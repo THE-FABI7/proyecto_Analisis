@@ -165,6 +165,9 @@ class GraphManager:
         self.edge_manager.gestionar_aristas()
         self._dibujar_grafo()
 
+    def cargarArchivo(self, nombreArchivo):
+        return json.load(open(nombreArchivo, "r"))
+    
     def _dibujar_grafo(self):
         # Dibuja el grafo utilizando los nodos y aristas gestionados por las clases auxiliares.
         if 'nodes' in st.session_state and 'edges' in st.session_state:
@@ -187,9 +190,9 @@ class GraphManager:
             if "graph" in json_data:
                 for nodeData in json_data["graph"][0]["data"]:
                     node_id = nodeData["id"]
-                    nodes.append(Node(id=node_id, size=nodeData["radius"],
+                    nodes.append(Node(id=node_id,
                                       label=nodeData["label"],
-                                      type=nodeData["type"], data=nodeData["data"], color="green", shape=None))
+                                      color="green", shape=None))
 
                 for nodeData in json_data["graph"][0]["data"]:
                     node_id = nodeData["id"]
@@ -477,6 +480,16 @@ class GraphManager:
         # plt.figure(figsize=(10, 5))
         # nx.draw(G, with_labels=True)
         # st.pyplot()
+     # Función para serializar los nodos
+    def serialize_nodes(self,obj, Node):
+        if isinstance(obj, Node):
+            return obj.__dict__
+        return obj
+    
+    def serialize_edges(self,obj, Edge):
+        if isinstance(obj, Edge):
+            return obj.__dict__
+        return obj
 
     def esBipartito(self, nodes, edges) -> bool:
         # Crear el grafo con networkx
@@ -531,3 +544,21 @@ class GraphManager:
                 return False
             else:
                 return bipartite.is_bipartite(G)
+
+    def obtenerConjuntosGrafoBipartito(self, nodes, edges):
+        # Crear el grafo con networkx
+        G = nx.Graph()
+        for node in nodes:
+            G.add_node(node.id, label=node.label)
+        for edge in edges:
+            G.add_edge(edge.source, edge.to, weight=edge.weight)
+
+        # Verificar si el grafo es bipartito
+        if not bipartite.is_bipartite(G):
+            return "El grafo no es bipartito"
+
+        # Obtener los nodos de cada conjunto con todos los atributos y aristas conectadas a cada nodo
+        conjuntos = list(bipartite.sets(G))
+        conjunto1 = conjuntos[0]
+        conjunto2 = conjuntos[1]
+        return conjunto1, conjunto2, edges
