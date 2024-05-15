@@ -1,71 +1,71 @@
 from models.GraphManager import GraphManager
 
+
 class Marginalizar:
     def __init__(self):
         self.particiones = []
+        self.graph_manager = GraphManager()  # Create a single instance for reuse
 
-    def dataM(self):
-        data = GraphManager().cargarArchivo("Data/complete_biparite_grsph.json")
-        return data
+    def load_data(self):
+        """Loads graph data from a JSON file."""
+        return self.graph_manager.cargarArchivo("Data/complete_biparite_grsph.json")
 
-    def datos(self, nodes, edges):
-        con1, con2, edges = GraphManager.obtenerConjuntosGrafoBipartito(
-            nodes, edges)
-        return con1, con2
+    def get_bipartite_sets(self, nodes, edges):
+        """Obtains two disjoint sets from a bipartite graph."""
+        return self.graph_manager.obtenerConjuntosGrafoBipartito(nodes, edges)
 
-    def marginalizar(self, nodes, edges, estadoActual, marginalizar):
+    def marginalize(self, nodes, edges, current_state, marginalize_flag):
+        """Performs marginalization on the graph states based on the given flag."""
         matrices = self.datosMatrices()
-        if len(estadoActual) == 1:  # puede ser 1 o 0
-            return self.marginalizarUnEstado(matrices, estadoActual, marginalizar)
+        if len(current_state) == 1:
+            return self.marginalize_single_state(matrices, current_state, marginalize_flag)
 
-    def marginalizarUnEstado(self, matrices, estadoActual, marginalizar):
-        probabilidad = {}
-        lista = list(matrices.keys())
+    def marginalize_single_state(self, matrices, current_state, marginalize_flag):
+        """Helper method to marginalize a single state."""
+        probability = {}
+        keys_list = list(matrices.keys())
 
-        def calcularProbabilidad(matriz, estados):
-            suma = [0, 0]
-            for key2 in matriz:
-                if all(key2[i] == estados[i] for i in range(len(estados))):
-                    suma[0] += matriz[key2][0]/2
-                    suma[1] += matriz[key2][1]/2
-            return suma
+        def probability_calculator(matrix, states):
+            """Calculates probability sums from matrix states."""
+            total = [0, 0]
+            for key, values in matrix.items():
+                if all(key[i] == states[i] for i in range(len(states))):
+                    total[0] += values[0] / 2
+                    total[1] += values[1] / 2
+            return total
 
-        for k, key in enumerate(lista):
-            matriz = matrices[lista[(k+1) % len(lista)]]  # obtenemos la matriz
-            for key in matriz:
-                estado1, estado2 = key[1], key[2]
-                probabilidad[estado1 +
-                             estado2] = calcularProbabilidad(matriz, estado2+estado1)
-        return probabilidad
+        for index, key in enumerate(keys_list):
+            matrix = matrices[keys_list[(index + 1) % len(keys_list)]]
+            for key_pair in matrix:
+                state1, state2 = key_pair[1], key_pair[2]
+                probability[state1 +
+                            state2] = probability_calculator(matrix, state2 + state1)
+        return probability
 
-    def calcularParticionesDelGrafo(self, nodes, edges, estadoActual):
-        conjunto1, conjunto2, aristas = GraphManager(
-        ).obtenerConjuntosGrafoBipartito(nodes, edges)
-        particiones = self.posiblesParticiones(conjunto1, conjunto2)
-        return particiones
+    def calculate_graph_partitions(self, nodes, edges, current_state):
+        """Calculates partitions of a bipartite graph."""
+        set1, set2, _ = self.graph_manager.obtenerConjuntosGrafoBipartito(
+            nodes, edges)
+        return self.total_partitions(set1, set2)
 
-    def posiblesParticiones(self, c1, c2):
-        c1 = list(c1)  # Convertir el conjunto c1 a lista
-        c2 = list(c2)  # Convertir el conjunto c2 a lista
-        particiones = {}  # Diccionario para almacenar las particiones
-        particiones_set = set()  # Conjunto para almacenar particiones únicas
+    def total_partitions(self, set1, set2):
+        """Generates all possible unique partitions of two sets."""
+        partitions = {}
+        unique_partitions = set()
 
-        def backtrack(conjunto1, conjunto2, particion1, particion2):
-            if not conjunto1 and not conjunto2:
-                particion = ''.join(map(str, particion1)) + \
-                    ',' + ''.join(map(str, particion2))
-                if particion not in particiones_set:
-                    particiones_set.add(particion)
-                    particiones[particion] = (particion1, particion2)
+        def backtrack(set1, set2, partition1, partition2):
+            if not set1 and not set2:
+                partition = ','.join(map(str, partition1 + partition2))
+                if partition not in unique_partitions:
+                    unique_partitions.add(partition)
+                    partitions[partition] = (partition1, partition2)
             else:
-                if conjunto1:
-                    for i in range(len(conjunto1)):
-                        backtrack(conjunto1[:i] + conjunto1[i+1:], conjunto2,
-                                  particion1 + [conjunto1[i]], particion2)
-                if conjunto2:
-                    for i in range(len(conjunto2)):
-                        backtrack(
-                            conjunto1, conjunto2[:i] + conjunto2[i+1:], particion1, particion2 + [conjunto2[i]])
+                for i in range(len(set1)):
+                    backtrack(set1[:i] + set1[i+1:], set2,
+                              partition1 + [set1[i]], partition2)
+                for i in range(len(set2)):
+                    backtrack(set1, set2[:i] + set2[i+1:],
+                              partition1, partition2 + [set2[i]])
 
-        backtrack(c2, c1, [], [])
-        return particiones
+        backtrack(list(set2), list(set1), [], [])
+        return partitions

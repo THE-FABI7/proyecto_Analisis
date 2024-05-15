@@ -230,6 +230,39 @@ class GraphManager:
             agraph(nodes=nodes, edges=edges, config=config)
             return json_data
         return None
+    
+    # Metoddo para abrir el grafo
+    def abrir_grafo_estrategia1(self):
+        uploaded_file = st.file_uploader("Elige un archivo .json", type="json")
+        if uploaded_file is not None:
+            file_details = {"FileName": uploaded_file.name,
+                        "FileType": uploaded_file.type}
+            st.write(file_details)
+            json_data = json.load(uploaded_file)
+
+            nodes = []
+            edges = []
+
+            for node in json_data['graph'][0]['data']:
+                nodes.append(
+                    Node(id=node['id'], label=node['label'], color="green", font={"color": "white"}))
+                for linked_node in node['linkedTo']:
+                    edge_color = GraphManager.asignarColorArista(linked_node['weight'])
+                    edges.append(Edge(source=node['id'], target=linked_node['nodeId'], label=str(
+                        linked_node['weight']),  color=edge_color))
+                    #si las aristas no tienen peso el color de las aristas sea por defecto morado
+                    if linked_node['weight'] == "":
+                        edge_color = "purple"
+                        edges.append(Edge(source=node['id'], target=linked_node['nodeId'], label=str(
+                        linked_node['weight']),  color=edge_color))
+
+
+            config = Config(width=1000, height=500, directed=False,
+                        nodeHighlightBehavior=True,  physics=False)
+            agraph(nodes=nodes, edges=edges, config=config)
+            return json_data
+        return None
+        
 
     def importar_datos(self):
         uploaded_file = st.file_uploader("Elige un archivo .txt", type="txt")

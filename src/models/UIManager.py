@@ -190,13 +190,12 @@ class UIManager:
                     st.text(salida)
 
             if archivo_selection == "Estrategia1":
-                st.write("Has seleccionado la opción de Probabilidades")
                 st.title("Simulador de Transiciones de Estado")
                 st.sidebar.header("Configuración de Estados Actuales")
 
                 # Obtenemos el path al archivo JSON a través de GraphManager
                 # Esto debería retornar el path al archivo JSON
-                datos_json = self.graph_manager.abrir_grafo()
+                datos_json = self.graph_manager.abrir_grafo_estrategia1()
 
                 print(datos_json)
 
