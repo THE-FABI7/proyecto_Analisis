@@ -167,7 +167,7 @@ class GraphManager:
 
     def cargarArchivo(self, nombreArchivo):
         return json.load(open(nombreArchivo, "r"))
-    
+
     def _dibujar_grafo(self):
         # Dibuja el grafo utilizando los nodos y aristas gestionados por las clases auxiliares.
         if 'nodes' in st.session_state and 'edges' in st.session_state:
@@ -230,13 +230,13 @@ class GraphManager:
             agraph(nodes=nodes, edges=edges, config=config)
             return json_data
         return None
-    
+
     # Metoddo para abrir el grafo
     def abrir_grafo_estrategia1(self):
         uploaded_file = st.file_uploader("Elige un archivo .json", type="json")
         if uploaded_file is not None:
             file_details = {"FileName": uploaded_file.name,
-                        "FileType": uploaded_file.type}
+                            "FileType": uploaded_file.type}
             st.write(file_details)
             json_data = json.load(uploaded_file)
 
@@ -247,22 +247,21 @@ class GraphManager:
                 nodes.append(
                     Node(id=node['id'], label=node['label'], color="green", font={"color": "white"}))
                 for linked_node in node['linkedTo']:
-                    edge_color = GraphManager.asignarColorArista(linked_node['weight'])
+                    edge_color = GraphManager.asignarColorArista(
+                        linked_node['weight'])
                     edges.append(Edge(source=node['id'], target=linked_node['nodeId'], label=str(
                         linked_node['weight']),  color=edge_color))
-                    #si las aristas no tienen peso el color de las aristas sea por defecto morado
+                    # si las aristas no tienen peso el color de las aristas sea por defecto morado
                     if linked_node['weight'] == "":
                         edge_color = "purple"
                         edges.append(Edge(source=node['id'], target=linked_node['nodeId'], label=str(
-                        linked_node['weight']),  color=edge_color))
-
+                            linked_node['weight']),  color=edge_color))
 
             config = Config(width=1000, height=500, directed=False,
-                        nodeHighlightBehavior=True,  physics=False)
+                            nodeHighlightBehavior=True,  physics=False)
             agraph(nodes=nodes, edges=edges, config=config)
             return json_data
         return None
-        
 
     def importar_datos(self):
         uploaded_file = st.file_uploader("Elige un archivo .txt", type="txt")
@@ -447,6 +446,46 @@ class GraphManager:
 
         return nodes, edges
 
+    def generar_grafo_bipartito(self, nodosG1, nodosG2, Node, Edge):
+        G = nx.Graph()
+        G.add_nodes_from(nodosG1, bipartite=0)
+        G.add_nodes_from(nodosG2, bipartite=1)
+        G.add_edges_from([(n1, n2) for n1 in nodosG1 for n2 in nodosG2])
+
+        # Agregar pesos a las aristas
+        for u, v in G.edges():
+            G.edges[u, v]['weight'] = random.randint(1, 1000)
+
+        # Definir las posiciones de los nodos en dos columnas verticales
+        pos = {}
+        espacio_vertical = 1000 / (max(len(nodosG1), len(nodosG2)) + 1)
+        for i, nodo in enumerate(nodosG1, start=1):
+            pos[nodo] = [500, i * espacio_vertical]  # Columna izquierda
+        for i, nodo in enumerate(nodosG2, start=1):
+            pos[nodo] = [900, i * espacio_vertical]  # Columna derecha
+
+        # Crear una lista de nodos con las nuevas coordenadas
+        nodes = [Node(id=str(nodo),
+                      label=str(nodo),
+                      shape=None,
+                      x=pos[nodo][0],  # Coordenada x asignada
+                      y=pos[nodo][1],  # Coordenada y asignada
+                      color='red' if nodo in nodosG1 else 'yellow')  # Color de nodo
+                 for nodo in G.nodes()]
+
+        # Crear una lista de aristas
+        edges = [Edge(source=str(u), target=str(v), label=str(G.edges[u, v]['weight']), weight=G.edges[u, v]['weight'], type="CURVE_SMOOTH", width=3, directed=True)
+                 for u, v in G.edges()]
+
+        # Configuración de la visualización del grafo
+        config = Config(height=600, width=800, directed=False,
+                        nodeHighlightBehavior=True, highlightColor="#F7A7A6", physics=False)
+
+        # Dibujar el grafo
+        agraph(nodes=nodes, edges=edges, config=config)
+        # Retornar los nodos y aristas
+        return nodes, edges
+
     @staticmethod
     def asignarColorArista(peso):
         if peso >= 0 and peso <= 20:
@@ -514,12 +553,12 @@ class GraphManager:
         # nx.draw(G, with_labels=True)
         # st.pyplot()
      # Función para serializar los nodos
-    def serialize_nodes(self,obj, Node):
+    def serialize_nodes(self, obj, Node):
         if isinstance(obj, Node):
             return obj.__dict__
         return obj
-    
-    def serialize_edges(self,obj, Edge):
+
+    def serialize_edges(self, obj, Edge):
         if isinstance(obj, Edge):
             return obj.__dict__
         return obj

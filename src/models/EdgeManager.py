@@ -149,7 +149,3 @@ class EdgeManager:
                 st.session_state.edges.append(nueva_arista)
                 self.graph.add_edge(source_node_id, target_node_id, weight=weight, color=edge_color)
                 st.success("Arista agregada correctamente.")
-
-
-
-

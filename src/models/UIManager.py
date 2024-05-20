@@ -217,6 +217,12 @@ class UIManager:
 
                     st.write("## Resultados de la Simulación:")
 
+                    # Guardar los estados futuros en un conjunto
+                    estados_futuros = {
+                        resultados['Estado Futuro A'].iloc[0],
+                        resultados['Estado Futuro B'].iloc[0],
+                        resultados['Estado Futuro C'].iloc[0]
+                    }
                     # Crear un nuevo DataFrame solo para mostrar en la interfaz
                     datos_para_mostrar = pd.DataFrame({
                         "Estado Actual": [resultados['Estado Actual'].iloc[0]],
@@ -230,6 +236,26 @@ class UIManager:
 
                     # Mostrar el DataFrame con Streamlit
                     st.dataframe(datos_para_mostrar)
+                    aux2 = []
+                    for i in estados_actuales:
+                        if "'" in str(i):
+                            aux2.append(str(i)[:-1])
+
+                    aux2_str = ', '.join(aux2)
+
+                    futuros_str = ', '.join(str(e) for e in estados_futuros)
+
+                    # Muestra la fórmula de probabilidad condicional con los valores de las variables
+                    st.latex(
+                        r'P(\{' + aux2_str + r'\}^{t+1} | \{' + futuros_str + r'\}^{t})')
+                    
+                    st.header("Particiones del grafo")
+                    
+                    
+                    st.header("Mejor particion del grafo")
+
+                    st.session_state.nodes, st.session_state.edges = GraphManager.generar_grafo_bipartito(
+                        self, estados_actuales, estados_futuros, Node, Edge)
 
             if archivo_selection == "Estrategia2":
                 st.write("Estrategia 2 en proceso")
