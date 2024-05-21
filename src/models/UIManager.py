@@ -1,4 +1,3 @@
-from Probabilidades.PartitionGenerator import PartitionGenerator
 from streamlit_agraph import Node, Edge
 import os
 import streamlit as st
@@ -10,19 +9,24 @@ from streamlit_agraph import agraph, Node, Edge, Config
 import random
 from src.models.GraphExporter import GraphExporter
 from src.models.GraphManager import GraphManager
-from src.models.NodeManager import NodeManager
-from src.models.EdgeManager import EdgeManager
 from src.Probabilidades.StateGraph import StateGraph
+from src.Probabilidades.PartitionGenerator import PartitionGenerator
+from src.Probabilidades.ProbabilityDistribution import ProbabilityDistribution
 
 
 class UIManager:
 
     def __init__(self):
         self.graph_manager = GraphManager()
-        graph = self.graph_manager.get_graph()
-        self.node_manager = NodeManager(graph)
-        self.edge_manager = EdgeManager(graph)
         self.exporter = GraphExporter()
+        if 'nodosG1' not in st.session_state:
+            st.session_state.nodosG1 = []
+        if 'nodosG2' not in st.session_state:
+            st.session_state.nodosG2 = []
+        if 'estado_actual' not in st.session_state:
+            st.session_state.estado_actual = None
+        if 'aux' not in st.session_state:
+            st.session_state.aux = None
 
     def load_css(self):
         with open('styles.css', 'r') as css:
@@ -73,7 +77,7 @@ class UIManager:
         archivo_options = ["nuevo grafo", "Abrir", "Cerrar", "Guardar",
                            "Guardar como", "Exportar datos", "Importar datos", "Salir"]
         editar_options = ["Deshacer", "Arco", "Nodo"]
-        ejecutar_options = ["procesos", "Estrategia1", "Estrategia2"]
+        ejecutar_options = ["procesos", "probabilidades"]
         ventana_options = ["Gráfica", "Tabla"]
         ayuda_options = ["Ayuda", "Acerca de Grafos"]
         # Usa un archivo de imagen y muéstralo en el encabezado de la barra lateral usando st.image.
@@ -159,16 +163,9 @@ class UIManager:
             if archivo_selection == "Deshacer":
                 st.write("Has seleccionado la Sub opción 1")
             if archivo_selection == "Nodo":
-                st.sidebar.header("Nodos Edit")
-                self.node_manager.agregar_nodo()
-                self.node_manager.editar_nodo(st)
-                self.node_manager.buscarNodo(st)
-                self.node_manager.eliminar_nodo(st)
+                self.graph_manager.buscarNodo(st)
             if archivo_selection == "Arco":
-                st.sidebar.header("Arco Edit")
-                self.edge_manager.gestionar_aristas()
-                self.edge_manager.editarArista()
-                self.edge_manager.eliminarArista()
+                st.write("Has seleccionado la Sub opción arco")
 
         elif navbar_selection == "Ejecutar":
             archivo_selection = st.sidebar.selectbox(
@@ -190,14 +187,14 @@ class UIManager:
                         st.session_state.nodes, st.session_state.edges)
                     st.text(salida)
 
-            if archivo_selection == "Estrategia1":
-
+            if archivo_selection == "probabilidades":
+                st.write("Has seleccionado la opción de Probabilidades")
                 st.title("Simulador de Transiciones de Estado")
                 st.sidebar.header("Configuración de Estados Actuales")
 
                 # Obtenemos el path al archivo JSON a través de GraphManager
                 # Esto debería retornar el path al archivo JSON
-                datos_json = self.graph_manager.abrir_grafo_estrategia1()
+                datos_json = self.graph_manager.abrir_grafo()
 
                 print(datos_json)
 
@@ -219,12 +216,6 @@ class UIManager:
 
                     st.write("## Resultados de la Simulación:")
 
-                    # Guardar los estados futuros en un conjunto
-                    estados_futuros = {
-                        resultados['Estado Futuro A'].iloc[0],
-                        resultados['Estado Futuro B'].iloc[0],
-                        resultados['Estado Futuro C'].iloc[0]
-                    }
                     # Crear un nuevo DataFrame solo para mostrar en la interfaz
                     datos_para_mostrar = pd.DataFrame({
                         "Estado Actual": [resultados['Estado Actual'].iloc[0]],
@@ -239,45 +230,42 @@ class UIManager:
                     # Mostrar el DataFrame con Streamlit
                     st.dataframe(datos_para_mostrar)
 
-                    st.write("## Inicio Estrategia")
+                st.write("## Inicio Estrategia")
 
-                    futuros = PartitionGenerator.retornar_Futuros(self)
-                    estados = PartitionGenerator.retornar_Estados(self)
-                    nodosG1 = st.multiselect(
-                        "Seleccione los nodos del estado presente", estados)
-                    nodosG2 = st.multiselect(
-                        'Seleccione los nodos del estado futuro:', futuros)
-                    estadoActual = st.selectbox(
-                        "Seleccione el estado Actual: ", PartitionGenerator.retornarValorActual(self, nodosG1))
-                    st.session_state.nodes, st.session_state.edges = GraphManager.generar_grafo_bipartito(self, nodosG1, nodosG2, Node, Edge)
-                    aux2 = []
-                    for i in nodosG2:
-                        # verificar si el dato tiene ' al final por ejemplo "1'"
-                        if "'" in i:
-                            aux2.append(i[:-1])
-                            
-                    if st.button("Solucionar"):
-                        aux = PartitionGenerator.retornarDistribucion(
-                            nodosG1, aux2, estadoActual, st)
-                    # Convierte las listas a cadenas
-                    nodosG1_str = ', '.join(nodosG1)
-                    aux2_str = ', '.join(aux2)
-                    st.latex(
-                        r'P(\{' + aux2_str + r'\}^{t+1} | \{' + nodosG1_str + r'\}^{t})')
-                    st.header("Distribución de probabilidad")
-                    st.table(aux)
-                    st.header("Particiones del grafo")
-                    particionesGrafo, particiones = PartitionGenerator.generar_particiones(
-                        nodosG1, nodosG2)
-                    st.table(particionesGrafo)
-                    st.header("Mejor particion del grafo")
-                    particion, valor, st.session_state.nodes, st.session_state.edges = PartitionGenerator.retornarMejorParticion(
-                        nodosG1, aux2, estadoActual, st.session_state.nodes, st.session_state.edges, st)
-                    st.header("Diferencia de la Mejor partición")
-                    st.write(valor)
+                futuros = PartitionGenerator.retornar_futuros()
+                estados = PartitionGenerator.retornar_estados()
+        
+                st.session_state.nodosG1 = st.multiselect("Seleccione los nodos del estado presente", estados, st.session_state.nodosG1)
+                st.session_state.nodosG2 = st.multiselect('Seleccione los nodos del estado futuro:', futuros, st.session_state.nodosG2)
+                st.session_state.estado_actual = st.selectbox("Seleccione el estado Actual: ", PartitionGenerator.retornar_valor_actual(st.session_state.nodosG1))
+                    
+                aux2 = []
+                for i in st.session_state.nodosG2:
+                     # verificar si el dato tiene ' al final por ejemplo "1'"
+                    if "'" in i:
+                        aux2.append(i[:-1])
 
-            if archivo_selection == "Estrategia2":
-                st.write("Estrategia 2 en proceso")
+                if st.button("Solucionar"):
+                    st.session_state.aux = PartitionGenerator.retornar_distribucion(st.session_state.nodosG1, aux2, st.session_state.estado_actual, st)
+                    
+                # Convierte las listas a cadenas
+                nodosG1_str = ', '.join(st.session_state.nodosG1)
+                aux2_str = ', '.join(aux2)
+                st.latex(r'P(\{' + aux2_str + r'\}^{t+1} | \{' + nodosG1_str + r'\}^{t})')
+                st.header("Distribución de probabilidad")
+                if st.session_state.aux is not None:
+                        st.table(st.session_state.aux)
+                    
+                st.header("Particiones del grafo")
+                particionesGrafo, particiones = PartitionGenerator.generar_particiones(st.session_state.nodosG1, st.session_state.nodosG2)
+                st.table(particionesGrafo)
+                st.header("Mejor particion del grafo")
+                particion, valor, st.session_state.nodes, st.session_state.edges = PartitionGenerator.retornar_mejor_particion(
+                    st.session_state.nodosG1, aux2, st.session_state.estado_actual, st.session_state.nodes, st.session_state.edges, st)
+                st.write(particion)
+                st.header("Diferencia de la Mejor partición")
+                st.write(valor)
+                print(valor)
 
         elif navbar_selection == "Ventana":
             archivo_selection = st.sidebar.selectbox(
@@ -323,7 +311,7 @@ class UIManager:
                 self.graph_manager.nuevo_grafo_aleatorio()
 
         if tipo_grafo == "personalizado":
-            self.graph_manager.nuevo_grafo_personalizado2(st)
+            self.graph_manager.nuevo_grafo_personalizado2()
 
         elif tipo_grafo == 'Bipartito':
             numNodosGrupo1 = st.sidebar.number_input(
