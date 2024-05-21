@@ -1,3 +1,4 @@
+from Probabilidades.PartitionGenerator import PartitionGenerator
 from streamlit_agraph import Node, Edge
 import os
 import streamlit as st
@@ -190,6 +191,7 @@ class UIManager:
                     st.text(salida)
 
             if archivo_selection == "Estrategia1":
+
                 st.title("Simulador de Transiciones de Estado")
                 st.sidebar.header("Configuración de Estados Actuales")
 
@@ -236,26 +238,43 @@ class UIManager:
 
                     # Mostrar el DataFrame con Streamlit
                     st.dataframe(datos_para_mostrar)
+
+                    st.write("## Inicio Estrategia")
+
+                    futuros = PartitionGenerator.retornar_Futuros(self)
+                    estados = PartitionGenerator.retornar_Estados(self)
+                    nodosG1 = st.multiselect(
+                        "Seleccione los nodos del estado presente", estados)
+                    nodosG2 = st.multiselect(
+                        'Seleccione los nodos del estado futuro:', futuros)
+                    estadoActual = st.selectbox(
+                        "Seleccione el estado Actual: ", PartitionGenerator.retornarValorActual(self, nodosG1))
+                    st.session_state.nodes, st.session_state.edges = GraphManager.generar_grafo_bipartito(self, nodosG1, nodosG2, Node, Edge)
                     aux2 = []
-                    for i in estados_actuales:
-                        if "'" in str(i):
-                            aux2.append(str(i)[:-1])
-
+                    for i in nodosG2:
+                        # verificar si el dato tiene ' al final por ejemplo "1'"
+                        if "'" in i:
+                            aux2.append(i[:-1])
+                            
+                    if st.button("Solucionar"):
+                        aux = PartitionGenerator.retornarDistribucion(
+                            nodosG1, aux2, estadoActual, st)
+                    # Convierte las listas a cadenas
+                    nodosG1_str = ', '.join(nodosG1)
                     aux2_str = ', '.join(aux2)
-
-                    futuros_str = ', '.join(str(e) for e in estados_futuros)
-
-                    # Muestra la fórmula de probabilidad condicional con los valores de las variables
                     st.latex(
-                        r'P(\{' + aux2_str + r'\}^{t+1} | \{' + futuros_str + r'\}^{t})')
-                    
+                        r'P(\{' + aux2_str + r'\}^{t+1} | \{' + nodosG1_str + r'\}^{t})')
+                    st.header("Distribución de probabilidad")
+                    st.table(aux)
                     st.header("Particiones del grafo")
-                    
-                    
+                    particionesGrafo, particiones = PartitionGenerator.generar_particiones(
+                        nodosG1, nodosG2)
+                    st.table(particionesGrafo)
                     st.header("Mejor particion del grafo")
-
-                    st.session_state.nodes, st.session_state.edges = GraphManager.generar_grafo_bipartito(
-                        self, estados_actuales, estados_futuros, Node, Edge)
+                    particion, valor, st.session_state.nodes, st.session_state.edges = PartitionGenerator.retornarMejorParticion(
+                        nodosG1, aux2, estadoActual, st.session_state.nodes, st.session_state.edges, st)
+                    st.header("Diferencia de la Mejor partición")
+                    st.write(valor)
 
             if archivo_selection == "Estrategia2":
                 st.write("Estrategia 2 en proceso")
