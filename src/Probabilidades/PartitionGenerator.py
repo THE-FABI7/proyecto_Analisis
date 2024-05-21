@@ -12,37 +12,25 @@ class PartitionGenerator:
     """
 
     def generar_particiones(self, conjunto1, conjunto2):
-        """
-        Genera todas las posibles particiones de dos conjuntos.
-
-        Args:
-            conjunto1 (list): Primer conjunto.
-            conjunto2 (list): Segundo conjunto.
-
-        Returns:
-            tuple: DataFrame y lista de particiones.
-        """
         particiones = []
         for i in range(len(conjunto1) + 1):
             combos1 = combinations(conjunto1, i)
             for c1 in combos1:
                 particion1 = [list(c1), sorted(
-                    list(set(conjunto1) - set(c1)) + list(set(conjunto2)))]
+                    list(set(tuple(conjunto1)) - set(tuple(c1))) + list(set(tuple(conjunto2))))]
                 particiones.append(particion1)
         for i in range(len(conjunto2) + 1):
             combos2 = combinations(conjunto2, i)
             for c2 in combos2:
                 particion2 = [list(c2), sorted(
-                    list(set(conjunto2) - set(c2)) + list(set(conjunto1)))]
+                    list(set(tuple(conjunto2)) - set(tuple(c2))) + list(set(tuple(conjunto1))))]
                 particiones.append(particion2)
-
         n = len(conjunto1)
         for i, particion in enumerate(particiones):
             particiones[i].append(tuple(j % 2 for j in range(n)))
-
         particiones = [tuple(p) for p in particiones if p[0] and p[1]]
         df = pd.DataFrame(particiones, columns=[
-                          'Conjunto 1', 'Conjunto 2', 'Estado'])
+            'Conjunto 1', 'Conjunto 2', 'Estado'])
         return df, particiones
 
     def generar_combinaciones(self, c1, c2):
@@ -192,7 +180,8 @@ class PartitionGenerator:
 
     def retornar_Futuros(self):
         datos = ProbabilityDistribution.datos_mt(self)
-        resultado, estados = PartitionGenerator.generarEstadoTransicion(self, datos)
+        resultado, estados = PartitionGenerator.generarEstadoTransicion(
+            self, datos)
         # agregarle a cada valor de los estados una '
         for i in range(len(estados)):
             estados[i] = estados[i] + "'"
@@ -201,7 +190,8 @@ class PartitionGenerator:
 
     def retornar_Estados(self):
         datos = ProbabilityDistribution.datos_mt(self)
-        resultado, estados = PartitionGenerator.generarEstadoTransicion(self, datos)
+        resultado, estados = PartitionGenerator.generarEstadoTransicion(
+            self, datos)
         return estados
 
     def retornarValorActual(self, c1):
@@ -223,10 +213,11 @@ class PartitionGenerator:
         return lista
 
     def retornarDistribucion(self, eActual, eFuturo, valorActual, st):
-        matrices = ProbabilityDistribution.datos_mt()
-        resultado, estados = self.generarEstadoTransicion(matrices)
-        datos = ProbabilityDistribution.generar_distribucion_probabilidades(
-            matrices, eActual, eFuturo, valorActual, estados)
+        matrices = ProbabilityDistribution.datos_mt(self)
+        resultado, estados = PartitionGenerator.generarEstadoTransicion(
+            self, matrices)
+        datos = ProbabilityDistribution.generar_distribucion_probabilidades(self,
+                                                                            matrices, eActual, eFuturo, valorActual, estados)
         lista = []
         lista.append(str(datos[0][0]))
 
@@ -239,15 +230,16 @@ class PartitionGenerator:
 
     def retornarMejorParticion(self, c1, c2, estadoActual, nodes, edges, st):
         # df, particiones = self.generarParticiones(c1, c2)
-        matrices = ProbabilityDistribution.datos_mt()
-        resultado, estados = self.generarEstadoTransicion(matrices)
+        matrices = ProbabilityDistribution.datos_mt(self)
+        resultado, estados = PartitionGenerator.generarEstadoTransicion(
+            self, matrices)
 
-        distribucionProbabilidad = ProbabilityDistribution.generar_distribucion_probabilidades(
-            matrices, c1, c2, estadoActual, estados)  # Original
+        distribucionProbabilidad = ProbabilityDistribution.generar_distribucion_probabilidades(self,
+                                                                                               matrices, c1, c2, estadoActual, estados)  # Original
         # Combinaciones de particiones posibles de la original
-        combinaciones = self.generar_combinaciones(c1, c2)
-        particioness = self.generar_particiones(
-            distribucionProbabilidad, combinaciones)
+        combinaciones = PartitionGenerator.generar_combinaciones(self, c1, c2)
+        particioness = PartitionGenerator.generar_particiones(self,
+                                                              distribucionProbabilidad, combinaciones)
 
         menor = float('inf')
         particion = []
@@ -297,9 +289,9 @@ class PartitionGenerator:
                 if arista.source in lista_particiones[i][0][0]:
                     arista.dashes = True
                     arista.color = 'rgba(254, 20, 56, 0.5)'
-        
-        #TODO: todavia hay errores
-        #agraph(nodes=st.session_state.nodes,
-               #edges=st.session_state.edges, config=)
+
+        # TODO: todavia hay errores
+        # agraph(nodes=st.session_state.nodes,
+               # edges=st.session_state.edges, config=)
 
         return particion, diferencia, nodes, edges
