@@ -57,7 +57,6 @@ class EdgeManager:
     
     def editarArista(self):
         with st.sidebar:
-            print("Entra a editar arista")
             if 'selected_edge_index' not in st.session_state:
                 st.session_state['selected_edge_index'] = 0
 
@@ -125,11 +124,12 @@ class EdgeManager:
                 if st.button("Marcar arista como eliminada", key="delete_edge_button"): 
                     # Encuentra la arista seleccionada basándose en el índice
                     selected_edge = st.session_state.edges[selected_index]
-
+    
                     # Cambiar visualmente la arista seleccionada para indicar que ha sido "eliminada"
+                    selected_edge.dashes = True
                     # Aquí cambiamos el color a gris y agregamos "(eliminada)" a la etiqueta
                     selected_edge.color = "#CCCCCC"  # Usar un color gris
-                    selected_edge.label += " (eliminada)"  # Añadir nota a la etiqueta
+                    # selected_edge.label += "(el)"  # Añadir nota a la etiqueta
                 
                     st.success(f"Arista {selected_edge.source} -> {selected_edge.to} marcada como eliminada.")
 
@@ -149,7 +149,3 @@ class EdgeManager:
                 st.session_state.edges.append(nueva_arista)
                 self.graph.add_edge(source_node_id, target_node_id, weight=weight, color=edge_color)
                 st.success("Arista agregada correctamente.")
-
-
-
-

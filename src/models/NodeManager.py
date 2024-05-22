@@ -1,4 +1,3 @@
-
 import streamlit as st
 from streamlit_agraph import agraph, Node, Edge, Config
 
@@ -11,11 +10,11 @@ class NodeManager:
         if 'edges' not in st.session_state:
             st.session_state['edges'] = []
 
-    def gestionar_nodos(self):
+    def gestionar_nodos(self, st):
         with st.sidebar:
             self.agregar_nodo()
-            self.editar_nodo()
-            self.eliminar_nodo()
+            self.editar_nodo(st)
+            self.eliminar_nodo(st)
 
     def agregar_nodo(self):
         node_id = st.text_input("ID del nodo", key="add_node_id")
@@ -26,9 +25,11 @@ class NodeManager:
                 if node_id in [node.id for node in st.session_state['nodes']]:
                     st.error("El ID del nodo ya existe.")
                 else:
-                    nodo = Node(id=node_id, label=node_label, color=node_color)
+                    nodo = Node(id=node_id, label=node_label,
+                                color=node_color, size=16)
                     st.session_state['nodes'].append(nodo)
-                    self.graph.add_node(node_id, label=node_label, color=node_color)
+                    self.graph.add_node(
+                        node_id, label=node_label, color=node_color)
                     st.success("Nodo agregado correctamente.")
             else:
                 st.error("El ID y la etiqueta del nodo son obligatorios.")
@@ -46,10 +47,11 @@ class NodeManager:
         else:
             st.error("El ID y la etiqueta del nodo son obligatorios.")
 
-    def editar_nodo(self):
+    def editar_nodo(self, st):
         if st.session_state['nodes']:
             node_ids = [node.id for node in st.session_state['nodes']]
-            selected_node_id = st.selectbox("Seleccionar nodo a editar:", node_ids, key="edit_node_select")
+            selected_node_id = st.selectbox(
+                "Seleccionar nodo a editar:", node_ids, key="edit_node_select")
             new_label = st.text_input("Nueva etiqueta:", key="edit_node_label")
             new_color = st.color_picker("Nuevo color:", key="edit_node_color")
             if st.button("Actualizar Nodo", key="update_node"):
@@ -61,11 +63,26 @@ class NodeManager:
                         self.graph.nodes[selected_node_id]['color'] = new_color
                         st.success(f"Nodo {selected_node_id} actualizado.")
 
-    def eliminar_nodo(self):
+    def eliminar_nodo(self, st):
         if st.session_state['nodes']:
             node_ids = [node.id for node in st.session_state['nodes']]
-            selected_node_id = st.selectbox("Seleccionar nodo a eliminar:", node_ids, key="delete_node_select")
+            selected_node_id = st.selectbox(
+                "Seleccionar nodo a eliminar:", node_ids, key="delete_node_select")
             if st.button("Eliminar Nodo", key="delete_node"):
-                st.session_state['nodes'] = [node for node in st.session_state['nodes'] if node.id != selected_node_id]
+                st.session_state['nodes'] = [
+                    node for node in st.session_state['nodes'] if node.id != selected_node_id]
                 self.graph.remove_node(selected_node_id)
                 st.success(f"Nodo {selected_node_id} eliminado.")
+
+    def buscarNodo(self, st):
+        selectedNodoBuscar = st.sidebar.selectbox(
+            "Buscar Nodo:", [node.label for node in st.session_state.nodes])
+        if st.sidebar.button("Buscar Nodo"):
+            # Lógica para buscar el nodo seleccionado
+            nodoBuscar = next(
+                (node for node in st.session_state.nodes if node.label == selectedNodoBuscar), None)
+            if nodoBuscar:
+                nodoBuscar.color = "white"
+                st.success("Allado!")
+            else:
+                st.warning("No se ha seleccionado ningún nodo.")
