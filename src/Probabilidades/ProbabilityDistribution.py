@@ -33,10 +33,10 @@ class ProbabilityDistribution:
         indices = [estados.index(i) for i in estado_actual]
         probabilidades_distribuidas = []
         for i in estado_futuro:
-            nueva_tabla = self.generar_tabla_comparativa(tabla[i])
-            filtro2 = self.porcentaje_distribucion(nueva_tabla, indices, num)
+            nueva_tabla = ProbabilityDistribution.generar_tabla_comparativa(self,tabla[i])
+            filtro2 = ProbabilityDistribution.porcentaje_distribucion(self,nueva_tabla, indices, num)
             probabilidades_distribuidas.append(filtro2)
-        tabla = self.generar_tabla(probabilidades_distribuidas, num)
+        tabla = ProbabilityDistribution.generar_tabla(self,probabilidades_distribuidas, num)
         tabla[0] = [f"{estado_actual} | {estado_futuro}"] + tabla[0]
         tabla[1] = [num] + tabla[1]
         return tabla
@@ -61,9 +61,9 @@ class ProbabilityDistribution:
             nuevo_dato = tuple(int(bit) for bit in num_binario)
             return [[nuevo_dato], [nuevo_valor]]
         else:
-            tabla1 = self.generar_tabla(
+            tabla1 = ProbabilityDistribution.generar_tabla(self,
                 distribucion, num, i + 1, num_binario + '0', nuevo_valor * distribucion[i][1][2])
-            tabla2 = self.generar_tabla(
+            tabla2 = ProbabilityDistribution.generar_tabla(self,
                 distribucion, num, i + 1, num_binario + '1', nuevo_valor * distribucion[i][1][1])
             return [tabla1[0] + tabla2[0], tabla1[1] + tabla2[1]]
 

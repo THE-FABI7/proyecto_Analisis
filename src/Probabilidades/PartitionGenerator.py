@@ -223,9 +223,9 @@ class PartitionGenerator:
         return lista
 
     def retornarDistribucion(self, eActual, eFuturo, valorActual, st):
-        matrices = ProbabilityDistribution.datos_mt()
-        resultado, estados = self.generarEstadoTransicion(matrices)
-        datos = ProbabilityDistribution.generar_distribucion_probabilidades(
+        matrices = ProbabilityDistribution.datos_mt(self)
+        resultado, estados = PartitionGenerator.generarEstadoTransicion(self,matrices)
+        datos = ProbabilityDistribution.generar_distribucion_probabilidades(self,
             matrices, eActual, eFuturo, valorActual, estados)
         lista = []
         lista.append(str(datos[0][0]))
@@ -239,14 +239,14 @@ class PartitionGenerator:
 
     def retornarMejorParticion(self, c1, c2, estadoActual, nodes, edges, st):
         # df, particiones = self.generarParticiones(c1, c2)
-        matrices = ProbabilityDistribution.datos_mt()
-        resultado, estados = self.generarEstadoTransicion(matrices)
+        matrices = ProbabilityDistribution.datos_mt(self)
+        resultado, estados = PartitionGenerator.generarEstadoTransicion(self,matrices)
 
-        distribucionProbabilidad = ProbabilityDistribution.generar_distribucion_probabilidades(
+        distribucionProbabilidad = ProbabilityDistribution.generar_distribucion_probabilidades(self,
             matrices, c1, c2, estadoActual, estados)  # Original
         # Combinaciones de particiones posibles de la original
-        combinaciones = self.generar_combinaciones(c1, c2)
-        particioness = self.generar_particiones(
+        combinaciones = PartitionGenerator.generar_combinaciones(self,c1, c2)
+        particioness = PartitionGenerator.generar_particiones(self,
             distribucionProbabilidad, combinaciones)
 
         menor = float('inf')
