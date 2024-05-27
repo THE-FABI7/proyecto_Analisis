@@ -446,11 +446,16 @@ class GraphManager:
 
         return nodes, edges
 
-    def generar_grafo_bipartito(self, nodosG1, nodosG2, Node, Edge):
-        G = nx.Graph()
-        G.add_nodes_from(nodosG1, bipartite=0)
-        G.add_nodes_from(nodosG2, bipartite=1)
-        G.add_edges_from([(n1, n2) for n1 in nodosG1 for n2 in nodosG2])
+    def generar_grafo_bipartito(self, numNodosConjunto1: int, numNodosConjunto2: int, Node, Edge):
+       
+        G = nx.complete_bipartite_graph(numNodosConjunto1, numNodosConjunto2)
+        # Cambiar las etiquetas de los nodos para empezar desde 1
+        G = nx.relabel_nodes(G, {i: i+1 for i in range(numNodosConjunto1 + numNodosConjunto2)})
+
+        # Agregar etiquetas a los nodos
+        suma = numNodosConjunto1 + numNodosConjunto2
+        for i in range(1, suma + 1):
+            G.nodes[i]['label'] = str(i)
 
         # Agregar pesos a las aristas
         for u, v in G.edges():
@@ -458,24 +463,24 @@ class GraphManager:
 
         # Definir las posiciones de los nodos en dos columnas verticales
         pos = {}
-        espacio_vertical = 1000 / (max(len(nodosG1), len(nodosG2)) + 1)
-        for i, nodo in enumerate(nodosG1, start=1):
-            pos[nodo] = [500, i * espacio_vertical]  # Columna izquierda
-        for i, nodo in enumerate(nodosG2, start=1):
-            pos[nodo] = [900, i * espacio_vertical]  # Columna derecha
+        espacio_vertical = 1000 / (max(numNodosConjunto1, numNodosConjunto2) + 1)
+        for i in range(1, numNodosConjunto1 + 1):
+            pos[i] = [500, i * espacio_vertical]  # Columna izquierda
+        for i in range(numNodosConjunto1 + 1, suma + 1):
+            pos[i] = [900, (i - numNodosConjunto1) * espacio_vertical]  # Columna derecha
 
         # Crear una lista de nodos con las nuevas coordenadas
-        nodes = [Node(id=str(nodo),
-                      label=str(nodo),
-                      shape=None,
-                      x=pos[nodo][0],  # Coordenada x asignada
-                      y=pos[nodo][1],  # Coordenada y asignada
-                      color='red' if nodo in nodosG1 else 'yellow')  # Color de nodo
-                 for nodo in G.nodes()]
+        nodes = [Node(str(i), 
+                    label=G.nodes[i]['label'],
+                    shape=None,
+                    x=pos[i][0],  # Coordenada x asignada
+                    y=pos[i][1],  # Coordenada y asignada
+                    color='yellow' if i <= numNodosConjunto1 else 'red')  # Color de nodo
+                for i in range(1, suma + 1)]
 
         # Crear una lista de aristas
-        edges = [Edge(source=str(u), target=str(v), label=str(G.edges[u, v]['weight']), weight=G.edges[u, v]['weight'], type="CURVE_SMOOTH", width=3, directed=True)
-                 for u, v in G.edges()]
+        edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3, directed=False, 
+                    type="dotted", weight=G.edges[u, v]['weight']) for u, v in G.edges()]
 
         # Configuración de la visualización del grafo
         config = Config(height=600, width=800, directed=False,

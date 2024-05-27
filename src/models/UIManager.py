@@ -1,3 +1,4 @@
+from Probabilidades.estrategia2 import estrategia2
 from streamlit_agraph import Node, Edge
 import os
 import streamlit as st
@@ -11,6 +12,8 @@ from src.models.GraphExporter import GraphExporter
 from src.models.GraphManager import GraphManager
 from src.Probabilidades.StateGraph import StateGraph
 from src.Probabilidades.PartitionGenerator import PartitionGenerator
+from src.models.NodeManager import NodeManager
+from src.models.EdgeManager import EdgeManager
 from src.Probabilidades.ProbabilityDistribution import ProbabilityDistribution
 
 
@@ -18,7 +21,10 @@ class UIManager:
 
     def __init__(self):
         self.graph_manager = GraphManager()
+        graph = self.graph_manager.get_graph()
         self.exporter = GraphExporter()
+        self.node_manager = NodeManager(graph)
+        self.edge_manager = EdgeManager(graph)
         if 'nodosG1' not in st.session_state:
             st.session_state.nodosG1 = []
         if 'nodosG2' not in st.session_state:
@@ -163,10 +169,20 @@ class UIManager:
             if archivo_selection == "Deshacer":
                 st.write("Has seleccionado la Sub opción 1")
             if archivo_selection == "Nodo":
+                st.sidebar.header("Nodos Edit")
+                self.node_manager.agregar_nodo()
+                self.node_manager.editar_nodo(st)
+                self.node_manager.buscarNodo(st)
+                self.node_manager.eliminar_nodo(st)
                 self.graph_manager.buscarNodo(st)
             if archivo_selection == "Arco":
-                st.write("Has seleccionado la Sub opción arco")
-
+                st.sidebar.header("Arco edit")
+                self.edge_manager.gestionar_aristas()
+                self.edge_manager.editarArista()
+                self.edge_manager.eliminarArista()
+                
+        
+            
         elif navbar_selection == "Ejecutar":
             archivo_selection = st.sidebar.selectbox(
                 "Opciones", ejecutar_options)
@@ -268,7 +284,29 @@ class UIManager:
                 print(valor)
 
             if archivo_selection == "Estrategia 2":
-                st.write("Estrategia 2 en proceso")
+                # salida = {}
+                st.header("Estrategia 2")
+                numNodosG1 = st.sidebar.number_input("Número de nodos conjunto 1", min_value=0, max_value=100)
+                numNodosG2 = st.sidebar.number_input("Número de nodos conjunto 2", min_value=0, max_value=100) 
+                nodes, edges, salida = estrategia2.mostrarParticiones(self, numNodosG1, numNodosG2, Node, Edge)
+                st.session_state.nodes = nodes
+                st.session_state.edges = edges
+                
+                if st.button("Calcular probabilidad"):
+                    st.header("Mejor SubGrafo con el coste minimo de aristas eliminadas:")
+                    st.write(salida["mejorSubGrafo"])
+                    st.header("Posibles SubGrafos:")
+                    st.write(salida["subgrafos"])  
+                if st.button("Solucionar"):
+                    salida= estrategia2.mostrarParticiones2(self,st.session_state.nodes, st.session_state.edges)  
+                    st.header("Mejor SubGrafo con el coste minimo de aristas eliminadas:")
+                    st.write(salida["mejorSubGrafo"])
+                    st.header("Posibles SubGrafos:")
+                    st.write(salida["subgrafos"])  
+                    # st.header("Mas datos")
+                    #st.session_state.nodes, st.session_state.edges = estrategia2.mostrarParticiones3(self,st.session_state.nodes, st.session_state.edges, st)
+                
+                
 
         elif navbar_selection == "Ventana":
             archivo_selection = st.sidebar.selectbox(
