@@ -2,6 +2,7 @@ from Data.datapb.NodeDataRetrieve import NodeDataRetriever
 import numpy as np
 from scipy.stats import wasserstein_distance
 
+
 class ProbabilityDistribution:
     """
     Clase encargada de generar la distribución de probabilidades de transición entre estados.
@@ -14,7 +15,7 @@ class ProbabilityDistribution:
         procesamiento de datos.
         """
         retriever = NodeDataRetriever()
-        data = retriever.get_three_node_data()
+        data = retriever.get_six_node_data()
         return data
 
     @staticmethod
@@ -35,13 +36,22 @@ class ProbabilityDistribution:
         indices = [estados.index(i) for i in estado_actual]
         probabilidades_distribuidas = []
         for i in estado_futuro:
-            nueva_tabla = ProbabilityDistribution.generar_tabla_comparativa(tabla[i])
-            filtro2 = ProbabilityDistribution.porcentaje_distribucion(nueva_tabla, indices, num)
+            # verificar si i tiene "'", si es así, se elimina la comilla
+            if "'" in i:
+                i = i[:-1]
+
+            nuevaTabla = ProbabilityDistribution.generar_tabla_comparativa(
+                tabla[i])
+            filtro2 = ProbabilityDistribution.porcentaje_distribucion(
+                nuevaTabla, indices, num)
             probabilidades_distribuidas.append(filtro2)
-        tabla = ProbabilityDistribution.generar_tabla(probabilidades_distribuidas, num)
-        tabla[0] = [f"{estado_actual} | {estado_futuro}"] + tabla[0]
-        tabla[1] = [num] + tabla[1]
-        return tabla
+
+            tabla = ProbabilityDistribution.generar_tabla(
+                probabilidades_distribuidas, num)
+
+            tabla[0] = [[estado_futuro, estado_actual]] + tabla[0]
+            tabla[1] = [num] + tabla[1]
+            return tabla
 
     @staticmethod
     def generar_tabla(distribucion, num, i=0, num_binario='', nuevo_valor=1):
@@ -59,7 +69,8 @@ class ProbabilityDistribution:
             list: Tabla de probabilidades.
         """
         if i == len(distribucion):
-            num_binario = '0' * (len(distribucion) - len(num_binario)) + num_binario
+            num_binario = '0' * (len(distribucion) -
+                                 len(num_binario)) + num_binario
             nuevo_dato = tuple(int(bit) for bit in num_binario)
             return [[nuevo_dato], [nuevo_valor]]
         else:
@@ -70,7 +81,7 @@ class ProbabilityDistribution:
             return [tabla1[0] + tabla2[0], tabla1[1] + tabla2[1]]
 
     @staticmethod
-    def porcentaje_distribucion(tabla, indices, num):
+    def porcentaje_distribucion(tabla, indice, num):
         """
         Calcula el porcentaje de distribución de probabilidades.
 
@@ -82,17 +93,25 @@ class ProbabilityDistribution:
         Returns:
             list: Nueva tabla de probabilidades.
         """
-        tabla_nueva = [tabla[0]]
-        tabla1 = [fila for fila in tabla if all(i < len(num) and pos < len(
-            fila[0]) and fila[0][pos] == num[i] for i, pos in enumerate(indices))]
-        nuevos_valores = [0, 0]
+        tablaNueva = [tabla[0]]
+        fila = None
+        try:
+            tabla1 = [fila for fila in tabla[1:] if all(i < len(num) and pos < len(
+                fila[0]) and fila[0][pos] == num[i] for i, pos in enumerate(indice))]
+        except IndexError as e:
+            print(f"IndexError: {e}")
+            raise
+
+        nuevosValores = [0, 0]
         for i in tabla1:
-            nuevos_valores[0] += i[1]
-            nuevos_valores[1] += i[2]
-        nuevos_valores = [v / len(tabla1) for v in nuevos_valores]
-        nueva_fila = [num, *nuevos_valores]
-        tabla_nueva.append(nueva_fila)
-        return tabla_nueva
+            nuevosValores[0] += i[1]
+            nuevosValores[1] += i[2]
+
+        total = sum(nuevosValores)
+        nuevosValores = [v / total if total != 0 else v for v in nuevosValores]
+        nuevaFila = [num, *nuevosValores]
+        tablaNueva.append(nuevaFila)
+        return tablaNueva
 
     @staticmethod
     def generar_tabla_comparativa(diccionario):
@@ -124,8 +143,19 @@ class ProbabilityDistribution:
         """
         p1 = np.array(p1)
         p2 = np.array(p2)
-        diferencias = [wasserstein_distance(p1, p2_row) for p2_row in p2]
-        return diferencias
+
+        # Asegúrate de que p1 y p2 sean unidimensionales
+        if p1.ndim != 1 or p2.ndim != 1:
+            raise ValueError("p1 y p2 deben ser arrays unidimensionales")
+
+        # Ajusta p2 para que tenga la misma longitud que p1
+        if len(p1) != len(p2):
+            p2 = np.interp(np.linspace(0, 1, len(p1)),
+                           np.linspace(0, 1, len(p2)), p2)
+
+        cost_matrix = np.abs(np.subtract.outer(p1, p2))
+        salida = np.sum(np.min(cost_matrix, axis=1) * p1)
+        return salida
 
     @staticmethod
     def producto_tensor(p1, p2):
@@ -143,3 +173,22 @@ class ProbabilityDistribution:
         p2 = np.array(p2)
         resultado = np.outer(p1, p2)
         return resultado
+
+    def generarEstadoTransicion(self, subconjuntos):
+        estados = list(subconjuntos.keys())
+        transiciones = {}
+        estado_actual = [0] * len(estados)
+
+        def aux(i):
+            if i == len(estados):
+                estado_actual_tuple = tuple(estado_actual)
+                estado_futuro = tuple(
+                    subconjuntos[estado][estado_actual_tuple] for estado in estados)
+                transiciones[estado_actual_tuple] = estado_futuro
+            else:
+                estado_actual[i] = 0
+                aux(i + 1)
+                estado_actual[i] = 1
+                aux(i + 1)
+        aux(0)
+        return transiciones, estados

@@ -1,9 +1,11 @@
 from itertools import combinations
 import re
+import time
 import pandas as pd
 from streamlit_agraph import agraph, Node, Edge, Config
 
 from Probabilidades.ProbabilityDistribution import ProbabilityDistribution
+
 
 class PartitionGenerator:
     """
@@ -11,7 +13,7 @@ class PartitionGenerator:
     """
 
     @staticmethod
-    def generar_particiones(conjunto1, conjunto2):
+    def generar_particiones(conjunto1, conjunto2, estadoActual):
         """
         Genera todas las posibles particiones de dos conjuntos.
 
@@ -22,28 +24,14 @@ class PartitionGenerator:
         Returns:
             tuple: DataFrame y lista de particiones.
         """
+        matrices = ProbabilityDistribution.datos_mt()
         particiones = []
-        for i in range(len(conjunto1) + 1):
-            combos1 = combinations(conjunto1, i)
-            for c1 in combos1:
-                particion1 = [list(c1), sorted(list(set(conjunto1) - set(c1)) + list(conjunto2))]
-                particiones.append(particion1)
-        for i in range(len(conjunto2) + 1):
-            combos2 = combinations(conjunto2, i)
-            for c2 in combos2:
-                particion2 = [list(c2), sorted(list(set(conjunto2) - set(c2)) + list(conjunto1))]
-                particiones.append(particion2)
+        a, b, c, lista = PartitionGenerator.retornar_mejor_particion(
+            conjunto1, conjunto2, estadoActual)
 
-        n = len(conjunto1)
-        for i, particion in enumerate(particiones):
-            particiones[i].append(tuple(j % 2 for j in range(n)))
-
-        # Convertir las listas internas a tuplas para hacerlas hasheables
-        particiones = [tuple(tuple(x) for x in p) for p in particiones if p[0] and p[1]]
-        df = pd.DataFrame(particiones, columns=['Conjunto 1', 'Conjunto 2', 'Estado'])
+        df = pd.DataFrame(lista, columns=[
+                          'Conjunto 1', 'Conjunto 2', 'Diferencia', 'Tiempo de ejecución'])
         return df, particiones
-
-
 
     @staticmethod
     def generar_combinaciones(c1, c2):
@@ -57,12 +45,16 @@ class PartitionGenerator:
         Returns:
             list: Lista de combinaciones.
         """
-        conjunto1 = [comb for i in range(len(c1) + 1) for comb in combinations(range(len(c1)), i)]
-        conjunto2 = [comb for i in range(len(c2) + 1) for comb in combinations(range(len(c2)), i)]
-        todas_las_combinaciones = [(cc1, cc2) for cc1 in conjunto1 for cc2 in conjunto2]
+        conjunto1 = [comb for i in range(len(c1) + 1)
+                     for comb in combinations(range(len(c1)), i)]
+        conjunto2 = [comb for i in range(len(c2) + 1)
+                     for comb in combinations(range(len(c2)), i)]
+        todas_las_combinaciones = [(cc1, cc2)
+                                   for cc1 in conjunto1 for cc2 in conjunto2]
         lista_combinaciones = []
         for comb in todas_las_combinaciones:
-            parte_contador = (tuple(set(range(len(c1))) - set(comb[0])), tuple(set(range(len(c2))) - set(comb[1])))
+            parte_contador = (tuple(
+                set(range(len(c1))) - set(comb[0])), tuple(set(range(len(c2))) - set(comb[1])))
             if (parte_contador, comb) not in lista_combinaciones and (comb, parte_contador) not in lista_combinaciones:
                 lista_combinaciones.append([comb, parte_contador])
         return lista_combinaciones
@@ -113,8 +105,10 @@ class PartitionGenerator:
         Returns:
             tuple: Listas de salida de particiones.
         """
-        p1 = tuple(lista_distribuida[1][0][i] for i in e_actual1 if i < len(lista_distribuida[1][0]))
-        p2 = tuple(lista_distribuida[1][0][i] for i in e_actual2 if i < len(lista_distribuida[1][0]))
+        p1 = tuple(lista_distribuida[1][0][i]
+                   for i in e_actual1 if i < len(lista_distribuida[1][0]))
+        p2 = tuple(lista_distribuida[1][0][i]
+                   for i in e_actual2 if i < len(lista_distribuida[1][0]))
         lista_nueva1 = []
         lista_nueva2 = []
         i1 = {}
@@ -122,11 +116,15 @@ class PartitionGenerator:
         for num, fila in enumerate(lista_distribuida[0][1:], start=1):
             aux_nueva_tabla1 = tuple(fila[i - 1] for i in e_futuro1)
             aux_nueva_tabla2 = tuple(fila[i - 1] for i in e_futuro2)
-            PartitionGenerator.actualizar_tabla(i1, aux_nueva_tabla1, lista_nueva1, num)
-            PartitionGenerator.actualizar_tabla(i2, aux_nueva_tabla2, lista_nueva2, num)
+            PartitionGenerator.actualizar_tabla(
+                i1, aux_nueva_tabla1, lista_nueva1, num)
+            PartitionGenerator.actualizar_tabla(
+                i2, aux_nueva_tabla2, lista_nueva2, num)
 
-        lista_aux1 = [p1] + PartitionGenerator.calcular_promedio(i1, lista_distribuida)
-        lista_aux2 = [p2] + PartitionGenerator.calcular_promedio(i2, lista_distribuida)
+        lista_aux1 = [p1] + \
+            PartitionGenerator.calcular_promedio(i1, lista_distribuida)
+        lista_aux2 = [p2] + \
+            PartitionGenerator.calcular_promedio(i2, lista_distribuida)
         lista_salida1 = [['Key'] + lista_nueva1, lista_aux1]
         lista_salida2 = [['Key'] + lista_nueva2, lista_aux2]
         return lista_salida1, lista_salida2
@@ -147,7 +145,8 @@ class PartitionGenerator:
         cadena = distribuciones[0][0]
         lista1, lista2 = [eval(subcadena) for subcadena in cadena.split('|')]
         for i in combinaciones[1:]:
-            lista = PartitionGenerator.particiones(distribuciones, i[0][0], i[1][0], i[0][1], i[1][1])
+            lista = PartitionGenerator.particiones(
+                distribuciones, i[0][0], i[1][0], i[0][1], i[1][1])
             nombre = "("
             for j in i[0][0]:
                 if j < len(lista1):
@@ -177,7 +176,8 @@ class PartitionGenerator:
         def aux(i):
             if i == len(estados):
                 estado_actual_tuple = tuple(estado_actual)
-                estado_futuro = tuple(subconjuntos[estado][estado_actual_tuple] for estado in estados)
+                estado_futuro = tuple(
+                    subconjuntos[estado][estado_actual_tuple] for estado in estados)
                 transiciones[estado_actual_tuple] = estado_futuro
             else:
                 estado_actual[i] = 0
@@ -191,7 +191,8 @@ class PartitionGenerator:
     @staticmethod
     def retornar_futuros():
         datos = ProbabilityDistribution.datos_mt()
-        resultado, estados = PartitionGenerator.generar_estado_transicion(datos)
+        resultado, estados = PartitionGenerator.generar_estado_transicion(
+            datos)
         # agregarle a cada valor de los estados una '
         for i in range(len(estados)):
             estados[i] = estados[i] + "'"
@@ -200,32 +201,31 @@ class PartitionGenerator:
     @staticmethod
     def retornar_estados():
         datos = ProbabilityDistribution.datos_mt()
-        resultado, estados = PartitionGenerator.generar_estado_transicion(datos)
+        resultado, estados = PartitionGenerator.generar_estado_transicion(
+            datos)
         return estados
 
     @staticmethod
-    def retornar_valor_actual(c1):
-        datos = ProbabilityDistribution.datos_mt()
+    def retornar_valor_actual(self, c1, c2):
         lista = []
-        if len(c1) == 1:
-            lista.append((0,))
-            lista.append((1,))
-        elif len(c1) == 2:
-            lista.append((0, 0))
-            lista.append((0, 1))
-            lista.append((1, 0))
-            lista.append((1, 1))
-        else:
-            for k, v in datos.items():
-                for k2, v2 in v.items():
-                    lista.append(k2)
-                break
+        matrices = ProbabilityDistribution.datos_mt()
+
+        # Generar todos los números binarios posibles según la longitud de c1
+        # longitud = len(c1)
+        # combinaciones_binarias = list(product([0, 1], repeat=longitud))
+
+        # lista.extend(combinaciones_binarias)
+
+        for j in matrices['1']:
+            lista.append(j)
+
         return lista
 
     @staticmethod
     def retornar_distribucion(e_actual, e_futuro, valor_actual, st):
         matrices = ProbabilityDistribution.datos_mt()
-        resultado, estados = PartitionGenerator.generar_estado_transicion(matrices)
+        resultado, estados = PartitionGenerator.generar_estado_transicion(
+            matrices)
         datos = ProbabilityDistribution.generar_distribucion_probabilidades(
             matrices, e_actual, e_futuro, valor_actual, estados)
         lista = []
@@ -239,68 +239,68 @@ class PartitionGenerator:
         return df
 
     @staticmethod
-    def retornar_mejor_particion(c1, c2, estado_actual, nodes, edges, st):
+    def retornar_mejor_particion(c1, c2, estado_actual):
         matrices = ProbabilityDistribution.datos_mt()
-        resultado, estados = PartitionGenerator.generar_estado_transicion(matrices)
+        resultado, estados = PartitionGenerator.generar_estado_transicion(
+            matrices)
 
         distribucion_probabilidad = ProbabilityDistribution.generar_distribucion_probabilidades(
             matrices, c1, c2, estado_actual, estados)  # Original
 
-        combinaciones = PartitionGenerator.generar_combinaciones(c1, c2)
-        particiones_df, particiones_lista = PartitionGenerator.generar_particiones(c1, c2)
+        lista = []
 
-        def convertir_a_numerico(item):
-            if item == 'A':
-                return 1
-            elif item == 'B':
-                return 2
-            elif item == 'C':
-                return 3
-            else:
-                return float(item)  # Convertir a float si ya es un número
+        particion, diferencia, tiempo, lista = PartitionGenerator.busqueda_voraz(
+            matrices, estados, distribucion_probabilidad, c1, c2, estado_actual)
+        return particion, diferencia, tiempo, lista
 
-        menor = float('inf')
-        particion = []
-        particiones_menores = {}
-        part = {}
+    def busqueda_voraz( matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual):
+        mejor_particion = []
+        menor_diferencia = float('inf')
+        listaParticionesEvaluadas = []
+        for i in range(len(c1)):
+            c1_izq = c1[:i]
+            c1_der = c1[i:]
+            c2_izq = []
+            c2_der = list(c2)
 
-        for particion in particiones_lista:
-            particion1 = [convertir_a_numerico(item) for item in particion[0]]  # Convertir directamente los elementos
-            particion2 = [convertir_a_numerico(item) for item in particion[1]]  # Convertir directamente los elementos
-            prod_tensor = ProbabilityDistribution.producto_tensor(particion1, particion2)
-            diferencia = min(ProbabilityDistribution.calcular_emd(
-                distribucion_probabilidad[1][1:], prod_tensor))
-            part[particion] = diferencia
+            for j in range(len(c2)):
+                c2_izq.append(c2_der.pop(0))
 
-        for particion in part:
-            if part[particion] < menor:
-                menor = part[particion]
-
-        for particion in part:
-            if part[particion] == menor:
-                particiones_menores[particion] = part[particion]
-        lista_particiones = []
-        for particion, probabilidad in particiones_menores.items():
-            particion1 = [list(map(convertir_a_numerico, p)) for p in particion[0]]
-            particion2 = [list(map(convertir_a_numerico, p)) for p in particion[1]]
-            lista_particiones.append([particion1, particion2, probabilidad])
-
-        for i in range(len(lista_particiones)):
-            if [] in lista_particiones[i][0]:
-                lista_particiones[i][0].remove([])
-                lista_particiones[i][0][0].append("")
-                if len(lista_particiones[i][0]) > 1:
-                    a = lista_particiones[i][0][1]
-                    print(a)
-
-            print(lista_particiones[i][0])
-            a = lista_particiones[i][0][0]
-            for arista in edges:
-                if arista.source in lista_particiones[i][0][0]:
-                    arista.dashes = True
-                    arista.color = 'rgba(254, 20, 56, 0.5)'
-
-        return particion, menor, nodes, edges
-
-
-
+                inicio = time.time()
+                distribucion_izq = ProbabilityDistribution.generar_distribucion_probabilidades(
+                    matrices, c1_izq, c2_izq, estadoActual, estados)
+                distribucion_der = ProbabilityDistribution.generar_distribucion_probabilidades(
+                    matrices, c1_der, c2_der, estadoActual, estados)
+                p1 = distribucion_izq[1][1:]
+                p2 = distribucion_der[1][1:]
+                prodTensor = ProbabilityDistribution.producto_tensor(p1, p2)
+                diferencia = ProbabilityDistribution.calcular_emd(
+                    distribucionProbabilidadOriginal[1][1:], prodTensor)
+                fin = time.time()
+                tiempoEjecucion = fin - inicio
+                aux = []
+                if c2_der == [] and c1_der == []:
+                    continue
+                elif diferencia < menor_diferencia:
+                    menor_diferencia = diferencia
+                    mejor_particion = [
+                        (tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der), tuple(c1_der))]
+                aux = [(tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der),
+                                                          tuple(c1_der)), str(diferencia), str(tiempoEjecucion)]
+                listaParticionesEvaluadas.append(aux)
+        return mejor_particion, menor_diferencia, tiempoEjecucion, listaParticionesEvaluadas
+    
+    
+    def convertir_a_listas(self, datos):
+        lineas = datos.split('\n')
+        listas = []
+        for linea in lineas:
+            grupos = linea.split(' - ')
+            grupos_listas = []
+            for grupo in grupos:
+                subgrupos = grupo.split(') (')
+                subgrupos = [subgrupo.replace("(", "").replace(")", "").strip() for subgrupo in subgrupos]
+                subgrupos_listas = [subgrupo.split() if subgrupo else [] for subgrupo in subgrupos]
+                grupos_listas.append(subgrupos_listas)
+            listas.append(grupos_listas)
+        return listas

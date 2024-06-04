@@ -1,5 +1,8 @@
 from streamlit_agraph import agraph, Node, Edge, Config
 import re
+import streamlit_agraph as stag
+
+from Probabilidades.PartitionGenerator import PartitionGenerator
 
 
 class Visualizer:
@@ -38,3 +41,26 @@ class Visualizer:
 
         agraph(nodes=self.st.session_state.nodes, edges=self.st.session_state.edges, config=Config(width=900, height=900, directed=False,
                                                                                                    nodeHighlightBehavior=True, physics=False))
+
+    def pintarGrafoGenerado(self, c1, c2, estadoActual, nodes, edges, st):
+        mP, _, _, _ = PartitionGenerator.retornar_mejor_particion(
+            c1, c2, estadoActual)
+        p1, p2 = mP
+        for i in p1:
+            for j in range(len(i)):
+                if i[j] not in p2[0]:
+                    for arista in edges:
+                        if p2[0] and arista.source == i[j] and arista.to in p2[0]:
+                            arista.dashes = True
+                            arista.color = 'rgba(254, 20, 56, 0.5)'
+        for i in p2[1]:
+            if i not in p1[0]:
+                for arista in edges:
+                    if arista.source == i and arista.to in p1[0]:
+                        arista.dashes = True
+                        arista.color = 'rgba(254, 20, 56, 0.5)'
+        
+        config=Config(width=900, height=900, directed=False,
+              nodeHighlightBehavior=True, physics=False)
+        
+        graph = stag.agraph(nodes=nodes, edges=edges, config = config)
