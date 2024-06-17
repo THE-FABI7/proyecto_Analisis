@@ -253,7 +253,7 @@ class PartitionGenerator:
             matrices, estados, distribucion_probabilidad, c1, c2, estado_actual)
         return particion, diferencia, tiempo, lista
 
-    def busqueda_voraz( matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual):
+    def busqueda_voraz(matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual):
         mejor_particion = []
         menor_diferencia = float('inf')
         listaParticionesEvaluadas = []
@@ -267,30 +267,31 @@ class PartitionGenerator:
                 c2_izq.append(c2_der.pop(0))
 
                 inicio = time.time()
-                distribucion_izq = ProbabilityDistribution.generar_distribucion_probabilidades(
+                distribucion_izq = ProbabilityDistribution.Solucion_estrategia1(
                     matrices, c1_izq, c2_izq, estadoActual, estados)
-                distribucion_der = ProbabilityDistribution.generar_distribucion_probabilidades(
+                distribucion_der = ProbabilityDistribution.Solucion_estrategia1(
                     matrices, c1_der, c2_der, estadoActual, estados)
                 p1 = distribucion_izq[1][1:]
+                print(p1)
                 p2 = distribucion_der[1][1:]
-                prodTensor = ProbabilityDistribution.producto_tensor(p1, p2)
-                diferencia = ProbabilityDistribution.calcular_emd(
-                    distribucionProbabilidadOriginal[1][1:], prodTensor)
+                print(p2)
+                # prodTensor = ProbabilityDistribution.producto_tensor(p1, p2)
+                # diferencia = ProbabilityDistribution.calcular_emd(
+                # distribucionProbabilidadOriginal[1][1:], prodTensor)
                 fin = time.time()
                 tiempoEjecucion = fin - inicio
                 aux = []
-                if c2_der == [] and c1_der == []:
-                    continue
-                elif diferencia < menor_diferencia:
-                    menor_diferencia = diferencia
-                    mejor_particion = [
-                        (tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der), tuple(c1_der))]
-                aux = [(tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der),
-                                                          tuple(c1_der)), str(diferencia), str(tiempoEjecucion)]
-                listaParticionesEvaluadas.append(aux)
+                # if c2_der == [] and c1_der == []:
+                # continue
+                # elif diferencia < menor_diferencia:
+                # menor_diferencia = diferencia
+                # mejor_particion = [
+                # (tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der), tuple(c1_der))]
+                # aux = [(tuple(c2_izq), (tuple(c1_izq))), (tuple(c2_der),
+                #   tuple(c1_der)), str(diferencia), str(tiempoEjecucion)]
+                # listaParticionesEvaluadas.append(aux)
         return mejor_particion, menor_diferencia, tiempoEjecucion, listaParticionesEvaluadas
-    
-    
+
     def convertir_a_listas(self, datos):
         lineas = datos.split('\n')
         listas = []
@@ -299,8 +300,10 @@ class PartitionGenerator:
             grupos_listas = []
             for grupo in grupos:
                 subgrupos = grupo.split(') (')
-                subgrupos = [subgrupo.replace("(", "").replace(")", "").strip() for subgrupo in subgrupos]
-                subgrupos_listas = [subgrupo.split() if subgrupo else [] for subgrupo in subgrupos]
+                subgrupos = [subgrupo.replace("(", "").replace(
+                    ")", "").strip() for subgrupo in subgrupos]
+                subgrupos_listas = [subgrupo.split() if subgrupo else []
+                                    for subgrupo in subgrupos]
                 grupos_listas.append(subgrupos_listas)
             listas.append(grupos_listas)
         return listas

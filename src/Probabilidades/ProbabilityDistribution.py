@@ -53,6 +53,15 @@ class ProbabilityDistribution:
             tabla[1] = [num] + tabla[1]
             return tabla
 
+    def Solucion_estrategia1(matrices, c1, c2, estadoActual, estados):
+        tabla = {}
+        # Creamos una llave única para la tabla
+        key = (tuple(c1), tuple(c2), estadoActual)
+        if key not in tabla:
+            tabla[key] = ProbabilityDistribution.generar_distribucion_probabilidades(
+                matrices, c1, c2, estadoActual, estados)
+        return tabla[key]
+
     @staticmethod
     def generar_tabla(distribucion, num, i=0, num_binario='', nuevo_valor=1):
         """
@@ -141,6 +150,7 @@ class ProbabilityDistribution:
         Returns:
             list: Diferencias de probabilidad.
         """
+
         p1 = np.array(p1)
         p2 = np.array(p2)
 
@@ -171,7 +181,7 @@ class ProbabilityDistribution:
         """
         p1 = np.array(p1)
         p2 = np.array(p2)
-        resultado = np.outer(p1, p2)
+        resultado = np.outer(p1, p2).flatten()
         return resultado
 
     def generarEstadoTransicion(self, subconjuntos):

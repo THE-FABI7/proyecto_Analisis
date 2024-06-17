@@ -11,6 +11,8 @@ import networkx as nx
 import io
 from networkx.algorithms.components import is_connected
 
+from Probabilidades.PartitionGenerator import PartitionGenerator
+
 from .NodeManager import NodeManager
 from .EdgeManager import EdgeManager
 
@@ -636,3 +638,24 @@ class GraphManager:
         conjunto1 = conjuntos[0]
         conjunto2 = conjuntos[1]
         return conjunto1, conjunto2, edges
+
+    def grafoSoluciones(self, c1, c2, estadoActual, nodes, edges, st):
+        mP, a, b, c  = PartitionGenerator.retornar_mejor_particion(c1, c2, estadoActual)
+        p1, p2 = mP
+        for i in p1[1]:
+            if i not in p2[1]:
+                for arista in edges:
+                    if  arista.source == i and arista.to in p2[0]:
+                        arista.dashes = True
+                        arista.color = 'rgba(254, 20, 56, 0.5)'
+        for i in p2[1]:
+            if i not in p1[1]:
+                for arista in edges:
+                    if  arista.source == i and arista.to in p1[0]:
+                        arista.dashes = True
+                        arista.color = 'rgba(254, 20, 56, 0.5)'
+         # Configuración de la visualización del grafo
+        config = Config(height=600, width=800, directed=False,
+                        nodeHighlightBehavior=True, highlightColor="#F7A7A6", physics=False)
+        # Dibujar el grafo
+        agraph(nodes=nodes, edges=edges, config=config)

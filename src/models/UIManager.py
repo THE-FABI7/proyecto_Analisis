@@ -290,9 +290,7 @@ class UIManager:
 
                     # st.write(particion)
                     st.latex(r'P(\{' + str(particion) + r'\}')
-                    st.header("Diferencia de la Mejor partición")
-                    st.write(d)
-                    st.write(tiempo)
+                    GraphManager.grafoSoluciones(nodosG1, nodosG2,estadoActual, st.session_state.nodes, st.session_state.edges,st)
 
             if archivo_selection == "Estrategia 2":
                 # salida = {}
@@ -302,9 +300,9 @@ class UIManager:
                 c2 = st.multiselect(
                     "Seleccione los nodos del conjunto 2", PartitionGenerator.retornar_futuros())
                 estadoActual = st.selectbox(
-                    "Seleccione el estado actual", PartitionGenerator.retornar_valor_actual(self,c1, c2))
+                    "Seleccione el estado actual", PartitionGenerator.retornar_valor_actual(self, c1, c2))
                 st.session_state.nodes, st.session_state.edges = GraphManager.generar_grafo_bipartito(self,
-                    c1, c2, Node, Edge)
+                                                                                                      c1, c2, Node, Edge)
                 aux3 = []
                 for i in c2:
                     # verificar si el dato tiene ' al final por ejemplo "1'"
@@ -313,14 +311,11 @@ class UIManager:
 
                 if st.button("Solucionar"):
                     particionn, diferencia, tiempo, lista = estrategia2.estrategia2(self,
-                        c1, c2, estadoActual, st.session_state.edges)
+                                                                                    c1, c2, estadoActual, st.session_state.edges)
                     st.write(str(particionn), diferencia, tiempo)
                     st.header("Particiones del grafo")
                     df, particiones = estrategia2.generarParticiones(self,
-                        c1, c2, estadoActual, st.session_state.edges)
-
-                    # st.header("Mas datos")
-                    # st.session_state.nodes, st.session_state.edges = estrategia2.mostrarParticiones3(self,st.session_state.nodes, st.session_state.edges, st)
+                                                                     c1, c2, estadoActual, st.session_state.edges)
 
         elif navbar_selection == "Ventana":
             archivo_selection = st.sidebar.selectbox(
