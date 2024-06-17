@@ -7,44 +7,32 @@ class ProbabilityDistribution:
     Clase encargada de generar la distribución de probabilidades de transición entre estados.
     """
 
-    @staticmethod
-    def datos_mt():
+    def datos_mt(self):
         """
-        Esta función se llama datos_mt y probablemente contenga código relacionado con el manejo o
-        procesamiento de datos.
-        """
-        retriever = NodeDataRetriever()
-        data = retriever.get_three_node_data()
-        return data
-
-    @staticmethod
-    def generar_distribucion_probabilidades(tabla, estado_actual, estado_futuro, num, estados):
-        """
-        Genera la distribución de probabilidades de transición entre estados.
-
-        Args:
-            tabla (dict): Diccionario de transiciones.
-            estado_actual (list): Estado actual.
-            estado_futuro (list): Estado futuro.
-            num (int): Número de nodos.
-            estados (list): Lista de estados.
+        Obtiene los datos de transición entre nodos.
 
         Returns:
-            list: Tabla de probabilidades distribuidas.
+            dict: Diccionario de datos de transición.
         """
-        indices = [estados.index(i) for i in estado_actual]
-        probabilidades_distribuidas = []
-        for i in estado_futuro:
-            nueva_tabla = ProbabilityDistribution.generar_tabla_comparativa(tabla[i])
-            filtro2 = ProbabilityDistribution.porcentaje_distribucion(nueva_tabla, indices, num)
-            probabilidades_distribuidas.append(filtro2)
-        tabla = ProbabilityDistribution.generar_tabla(probabilidades_distribuidas, num)
-        tabla[0] = [f"{estado_actual} | {estado_futuro}"] + tabla[0]
+        retriever = NodeDataRetriever()
+        datos = retriever.get_six_node_data()
+        return datos
+
+    def tabla_distribucion_probabilidades(self, tabla, estadoActual, estadoFuturo, num, estados):
+        indice = [estados.index(i) for i in estadoActual]
+        prob_distribuidas = []
+        for i in estadoFuturo:
+            if "'" in i:
+                i = i[:-1]
+            nueva_tabla = self.crear_tabla_comparativa(tabla[i])
+            filtro2 = self.porcentajes_distribuciones(nueva_tabla, indice, num)
+            prob_distribuidas.append(filtro2)
+        tabla = self.crear_tabla(prob_distribuidas, num)
+        tabla[0] = [[estadoFuturo, estadoActual]] + tabla[0]
         tabla[1] = [num] + tabla[1]
         return tabla
-
-    @staticmethod
-    def generar_tabla(distribucion, num, i=0, num_binario='', nuevo_valor=1):
+        
+    def crear_tabla(self, distribucion, num, i=0, binario ='', nuevo_valor=1):
         """
         Genera una tabla de probabilidades distribuidas.
 
@@ -59,18 +47,15 @@ class ProbabilityDistribution:
             list: Tabla de probabilidades.
         """
         if i == len(distribucion):
-            num_binario = '0' * (len(distribucion) - len(num_binario)) + num_binario
-            nuevo_dato = tuple(int(bit) for bit in num_binario)
+            binario = '0' * (len(distribucion)-len(binario)) + binario
+            nuevo_dato = tuple(int(bit) for bit in binario)
             return [[nuevo_dato], [nuevo_valor]]
         else:
-            tabla1 = ProbabilityDistribution.generar_tabla(
-                distribucion, num, i + 1, num_binario + '0', nuevo_valor * distribucion[i][1][2])
-            tabla2 = ProbabilityDistribution.generar_tabla(
-                distribucion, num, i + 1, num_binario + '1', nuevo_valor * distribucion[i][1][1])
-            return [tabla1[0] + tabla2[0], tabla1[1] + tabla2[1]]
-
-    @staticmethod
-    def porcentaje_distribucion(tabla, indices, num):
+            tabla = self.crear_tabla(distribucion, num, i+1, binario+'0', nuevo_valor*distribucion[i][1][2])
+            tabla2 = self.crear_tabla(distribucion, num, i+1, binario+'1', nuevo_valor*distribucion[i][1][1])
+            return [tabla[0]+tabla2[0], tabla[1]+tabla2[1]]
+        
+    def porcentajes_distribuciones(self, tabla, indice, num):
         """
         Calcula el porcentaje de distribución de probabilidades.
 
@@ -83,19 +68,25 @@ class ProbabilityDistribution:
             list: Nueva tabla de probabilidades.
         """
         tabla_nueva = [tabla[0]]
-        tabla1 = [fila for fila in tabla if all(i < len(num) and pos < len(
-            fila[0]) and fila[0][pos] == num[i] for i, pos in enumerate(indices))]
+        fila = None
+        try:
+            tabla1 = [fila for fila in tabla[1:] if all(i < len(num) and pos < len(fila[0]) and fila[0][pos] == num[i] for i, pos in enumerate(indice))]
+        except IndexError as e:
+            print(f"IndexError: {e}")
+            raise
+
         nuevos_valores = [0, 0]
         for i in tabla1:
             nuevos_valores[0] += i[1]
             nuevos_valores[1] += i[2]
-        nuevos_valores = [v / len(tabla1) for v in nuevos_valores]
-        nueva_fila = [num, *nuevos_valores]
-        tabla_nueva.append(nueva_fila)
-        return tabla_nueva
 
-    @staticmethod
-    def generar_tabla_comparativa(diccionario):
+        total = sum(nuevos_valores)
+        nuevos_valores = [v / total if total != 0 else v for v in nuevos_valores]
+        fila_nueva = [num, *nuevos_valores]
+        tabla_nueva.append(fila_nueva)
+        return tabla_nueva
+    
+    def crear_tabla_comparativa(self, diccionario):
         """
         Genera una tabla comparativa a partir de un diccionario.
 
@@ -110,25 +101,28 @@ class ProbabilityDistribution:
             lista.append([k, v, 1 - v])
         return lista
 
-    @staticmethod
-    def calcular_emd(p1, p2):
+    def calcular_emd(self, p1, p2):
         """
         Calcula la diferencia de probabilidad utilizando Earth Mover's Distance (EMD).
 
         Args:
             p1 (list): Primera partición de probabilidades.
-            p2 (list): Segunda partición de probabilidades.
+            p2 (np.ndarray): Producto tensor de las particiones de probabilidades.
 
         Returns:
-            list: Diferencias de probabilidad.
+            float: Diferencia de probabilidad.
         """
         p1 = np.array(p1)
         p2 = np.array(p2)
+        
+        # Asegurarse de que p2 sea una matriz 2D para la iteración
+        if p2.ndim == 1:
+            p2 = p2.reshape(-1, 1)
+
         diferencias = [wasserstein_distance(p1, p2_row) for p2_row in p2]
         return diferencias
 
-    @staticmethod
-    def producto_tensor(p1, p2):
+    def producto_tensor(self, p1, p2):
         """
         Calcula el producto tensor de dos particiones de probabilidades.
 
@@ -141,5 +135,5 @@ class ProbabilityDistribution:
         """
         p1 = np.array(p1)
         p2 = np.array(p2)
-        resultado = np.outer(p1, p2)
-        return resultado
+        #resultado = np.outer(p1, p2)
+        return np.outer(p1, p2).flatten()
