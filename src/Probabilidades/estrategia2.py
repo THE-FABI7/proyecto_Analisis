@@ -1,3 +1,7 @@
+import time
+
+import pandas as pd
+from Probabilidades.ProbabilityDistribution import ProbabilityDistribution
 from models.GraphManager import GraphManager
 import numpy as np
 from itertools import chain, combinations
@@ -8,110 +12,93 @@ import matplotlib.pyplot as plt
 
 
 class estrategia2:
-    def conjunto(self, listaNodos: List[Any]) -> chain:
-        """Genera todas las combinaciones posibles de un conjunto de nodos."""
-        s = list(listaNodos)
-        return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
-    
-    def generarConjuntosConPeso(self, nodes: List[Any], edges: List[Any]) -> List[Tuple[Tuple[set, set], float, List[str]]]:
-        """Genera todas las particiones posibles de los nodos y calcula el peso total de las aristas entre las particiones."""
-        todas_las_particiones = []
-        n = len(nodes)
-        
-        for i in range(1, 2**n // 2):
-            S1, S2 = estrategia2.obtener_subconjuntos(self,nodes, i, n)
-            total_weight, aristasEliminadas = estrategia2.calcular_peso_total(self,S1, S2, edges)
-            todas_las_particiones.append(((S1, S2), total_weight, aristasEliminadas))
-        
-        return todas_las_particiones
-    
-    def obtener_subconjuntos(self, nodes: List[Any], i: int, n: int) -> Tuple[set, set]:
-        """Obtiene los subconjuntos S1 y S2 a partir del índice i."""
-        indicesS1 = [j for j in range(n) if (i >> j) & 1]
-        S1 = set([nodes[idx] for idx in indicesS1])
-        S2 = set(nodes) - S1
-        return S1, S2
+    def estrategia2(self, c1, c2, estadoActual, edges):
+        p = ProbabilityDistribution()
+        matrices = ProbabilityDistribution.datos_mt()
+        resultado, estados = ProbabilityDistribution.generarEstadoTransicion(self,
+            matrices)
+        distribucionProbabilidadOriginal = ProbabilityDistribution.generar_distribucion_probabilidades(
+            matrices, c1, c2, estadoActual, estados)
+        mejor_particion = []
+        menor_diferencia = float('inf')
+        listaParticionesEvaluadas = []
+        eliminadas = []
 
-    def calcular_peso_total(self, S1: set, S2: set, edges: List[Any]) -> Tuple[float, List[str]]:
-        """Calcula el peso total de las aristas entre dos subconjuntos S1 y S2."""
-        s11 = [nodo.id for nodo in S1]
-        s22 = [nodo.id for nodo in S2]
-        ss1 = [str(nodo.id) for nodo in S1]
-        ss2 = [str(nodo.id) for nodo in S2]
-        aristasEliminadas = []
-        total_weight = 0
-        
-        for edge in edges:
-            if ((edge.source in s11 and edge.to in s22) or 
-                (edge.source in s22 and edge.to in s11) or 
-                (edge.source in ss1 and edge.to in ss2) or 
-                (edge.source in ss2 and edge.to in ss1)):
-                total_weight += float(edge.weight)
-                aristasEliminadas.append(f"{edge.source} => {edge.to}")
-        
-        return total_weight, aristasEliminadas
-    
-    def mostrarParticiones(self, numNodosConjunto1, numNodosConjunto2, Node, Edge):
-        """Muestra todas las particiones posibles y encuentra la partición con el menor peso."""
-        nodes, edges = GraphManager.generar_grafo_bipartito(self,numNodosConjunto1, numNodosConjunto2, Node, Edge)
-        todas_las_particiones = estrategia2.generarConjuntosConPeso(self,nodes, edges)
-        resultados = estrategia2.procesar_particiones(self,todas_las_particiones)
-        return nodes, edges, resultados
-    
-    def mostrarParticiones2(self, nodes: List[Any], edges: List[Any]) -> Dict[str, Any]:
-        """Muestra todas las particiones posibles y encuentra la partición con el menor peso, sin generar un grafo bipartito."""
-        todas_las_particiones = estrategia2.generarConjuntosConPeso(self,nodes, edges)
-        resultados = estrategia2.procesar_particiones(self,todas_las_particiones)
-        return resultados
-    
-    def procesar_particiones(self, particiones: List[Tuple[Tuple[set, set], float, List[str]]]) -> Dict[str, Any]:
-        """Procesa todas las particiones posibles y encuentra la partición con el menor peso."""
-        peso_menor = float('inf')
-        resultados = {
-            "subgrafos": [],
-            "mejorSubGrafo": {},
-            "AristasNoConsideradas": {}
-        }
-        
-        for particion, peso_total, listaAristas in particiones:
-            datosSubgrafos = {
-                "G1": [nodo.id for nodo in particion[0]],
-                "G2": [nodo.id for nodo in particion[1]],
-                "peso_minimo_aristas_eliminadas": peso_total,
-                "AristasNoConsideradas": listaAristas
-            }
-            resultados["subgrafos"].append(datosSubgrafos)
-            if peso_total < peso_menor:
-                peso_menor = peso_total
-                resultados["mejorSubGrafo"] = datosSubgrafos
-        
-        return resultados
-    
-    def mostrarParticiones3(self, nodes: List[Any], edges: List[Any], st: Any) -> None:
-        """Genera particiones y visualiza los grafos resultantes en Streamlit."""
-        todas_las_particiones = estrategia2.generarConjuntosConPeso(self,nodes, edges)
-        for particion, peso_total, listaAristas in todas_las_particiones:
-            G = nx.Graph()
-            G.add_nodes_from([nodo.id for nodo in particion[0]], label="Conjunto 1")
-            G.add_nodes_from([nodo.id for nodo in particion[1]], label="Conjunto 2")
-            for arista in listaAristas:
-                nodo1, nodo2 = arista.split(" => ")
-                G.add_edge(nodo1.strip(), nodo2.strip())
-            
-            pos = nx.spring_layout(G)
-            nx.draw_networkx_nodes(G, pos, nodelist=[nodo.id for nodo in particion[0]], node_color="r", label="Conjunto 1")
-            nx.draw_networkx_nodes(G, pos, nodelist=[nodo.id for nodo in particion[1]], node_color="b", label="Conjunto 2")
-            nx.draw_networkx_edges(G, pos, edgelist=G.edges(), width=1.0, alpha=0.5)
-            nx.draw_networkx_labels(G, pos, font_size=8)
-            plt.title("Subgrafo")
-            plt.axis("off")
-            plt.legend()
-            st.pyplot(plt)
-   
-   
+        edges = [arista for arista in edges if estrategia2.calcular_perdida(self,
+            matrices, estados, distribucionProbabilidadOriginal, c1.copy(), c2.copy(), estadoActual, arista, p) != 0]
+
+        while edges:
+            inicio = time.time()
+            edges.sort(key=lambda arista: self.calcular_perdida(self,
+                matrices, estados, distribucionProbabilidadOriginal, c1.copy(), c2.copy(), estadoActual, arista, p))
+            arista_min_perdida = edges.pop(0)
+
+            if self.calcular_perdida(self, matrices, estados, distribucionProbabilidadOriginal, c1.copy(), c2.copy(), estadoActual, arista_min_perdida, p) == 0:
+                eliminadas.append(arista_min_perdida)
+                continue
+
+            c1_izq = []
+            c1_der = list(c1)
+            c2_izq = []
+            c2_der = list(c2)
+
+            if arista_min_perdida.source in c1_der:
+                c1_der.remove(arista_min_perdida.source)
+                c1_izq.append(arista_min_perdida.source)
+            if arista_min_perdida.to in c2_der:
+                c2_der.remove(arista_min_perdida.to)
+                c2_izq.append(arista_min_perdida.to)
+
+            distribucion_izq = ProbabilityDistribution.generar_distribucion_probabilidades(
+                matrices, tuple(c1_izq), tuple(c2_izq), estadoActual, estados)
+            distribucion_der = ProbabilityDistribution.generar_distribucion_probabilidades(
+                matrices, tuple(c1_der), tuple(c2_der), estadoActual, estados)
+            p1 = distribucion_izq[1][1:]
+            p2 = distribucion_der[1][1:]
+
+            prodTensor = ProbabilityDistribution.producto_tensor(p1, p2)
+            diferencia = ProbabilityDistribution.calcular_emd(
+                distribucionProbabilidadOriginal[1][1:], prodTensor)
+            fin = time.time()
+            tiempoEjecucion = fin - inicio
+
+            aux = []
+            if c2_der == [] and c1_der == []:
+                continue
+            elif diferencia < menor_diferencia:
+                menor_diferencia = diferencia
+                mejor_particion = [(tuple(c2_izq), tuple(
+                    c1_izq)), (tuple(c2_der), tuple(c1_der))]
+
+            aux = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der),
+                                                    tuple(c1_der)), str(diferencia), str(tiempoEjecucion)]
+            listaParticionesEvaluadas.append(aux)
+            eliminadas.append(arista_min_perdida)
+        return mejor_particion, menor_diferencia, tiempoEjecucion, listaParticionesEvaluadas
 
    
-   
-
-   
-   
+    def calcular_perdida(self, matrices, estados, distribucionProbabilidadOriginal, c1, c2, estadoActual, arista, p):
+        if arista.source in c1:
+            c1.remove(arista.source)
+            if arista.to in c2:
+                c2.remove(arista.to)
+        elif arista.source in c2:
+            c2.remove(arista.source)
+            if arista.to in c1:
+                c1.remove(arista.to)
+        else:
+            return float('inf')
+        
+        
+        distribucion_izq = ProbabilityDistribution.generar_distribucion_probabilidades(matrices, c1, c2, estadoActual, estados)
+        prodTensor = ProbabilityDistribution.producto_tensor(distribucion_izq[1][1:], distribucion_izq[1][1:])
+        diferencia = ProbabilityDistribution.calcular_emd(distribucionProbabilidadOriginal[1][1:], prodTensor)
+        return diferencia
+    
+    def generarParticiones(self, c1, c2, estadoActual, edges):
+        
+        particiones = []
+        a, b,c, lista = self.estrategia2(c1, c2, estadoActual, edges)
+        #print(lista)
+        df = pd.DataFrame(lista, columns=['Conjunto 1', 'Conjunto 2','Diferencia', 'Tiempo de ejecución'])
+        return df, particiones
