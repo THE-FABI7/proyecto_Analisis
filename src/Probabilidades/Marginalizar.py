@@ -1,6 +1,5 @@
 from models.GraphManager import GraphManager
 
-
 class Marginalizar:
     def __init__(self):
         self.particiones = []
