@@ -15,7 +15,7 @@ class Estrategia:
     
     def datos_mt(self):
         matrices = NodeDataRetriever()
-        return matrices.get_six_node_data()
+        return matrices.get_five_node_data()
 
     def retornar_particion_adecuada(self, conjunto1, conjunto2, estadoActual):
         matrices = self.datos_mt()
@@ -63,60 +63,75 @@ class Estrategia:
                 print("--------------------")
                 
         return mejor_particion, menor_diferencia, particiones_evaluadas
-    
-    def divide_y_venceras(self, matrices, estados, distribucion_particiones_original, conjunto1, conjunto2, estado_actual):
-        def merge_sort_partition(conjunto):
-            if len(conjunto) <= 1:
-                return conjunto
-            mid = len(conjunto) // 2
-            left_half = merge_sort_partition(conjunto[:mid])
-            right_half = merge_sort_partition(conjunto[mid:])
-            return left_half, right_half
-
-        def evaluate_partitions(c1_izq, c1_der, c2_izq, c2_der):
-            nonlocal menor_diferencia, mejor_particion
-            distribucion_izq = self.prob_dist.tabla_distribucion_probabilidades(matrices, c1_izq, c2_izq, estado_actual, estados)
-            distribucion_der = self.prob_dist.tabla_distribucion_probabilidades(matrices, c1_der, c2_der, estado_actual, estados)
-            p1 = distribucion_izq[1][1:]
-            p2 = distribucion_der[1][1:]
-            prod_tensor = self.prob_dist.producto_tensor(p1, p2)
-            diferencia = self.prob_dist.calcular_emd(distribucion_particiones_original[1][1:], prod_tensor)
-
-            if diferencia < menor_diferencia:
-                menor_diferencia = diferencia
-                mejor_particion = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der))]
-
-            particiones_evaluadas.append([(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der)), str(diferencia)])
+   
+    @Utilities.medir_tiempo
+    def busqueda_divide_y_venceras(self, matrices, estados, distribucion_particiones_original, conjunto1, conjunto2, estado_actual):
+        if len(conjunto1) == 0 or len(conjunto2) == 0:
+            return [], float('inf'), []
 
         mejor_particion = []
         menor_diferencia = float('inf')
         particiones_evaluadas = []
 
-        left_c1, right_c1 = merge_sort_partition(conjunto1)
-        left_c2, right_c2 = merge_sort_partition(conjunto2)
+        # Función auxiliar para dividir y evaluar particiones
+        def divide_y_evaluar(c1, c2):
+            nonlocal mejor_particion, menor_diferencia, particiones_evaluadas
+            for i in range(len(c1)):
+                c1_izq = c1[:i]
+                c1_der = c1[i:]
+                c2_izq = []
+                c2_der = list(c2)
 
-        print("left_c1", left_c1)
-        print("right_c1", right_c1)
-        print("C", left_c2)
-        print("right_c2", right_c2)
+                for j in range(len(c2)):
+                    c2_izq.append(c2_der.pop(0))
 
-        left_c2_filtrado = [i[:-1] if "'" in i else i for i in left_c2]
-        right_c2_filtrado = [i[:-1] if "'" in i else i for i in right_c2]
+                    distribucion_izq = self.prob_dist.tabla_distribucion_probabilidades(matrices, c1_izq, c2_izq, estado_actual, estados)
+                    distribucion_der = self.prob_dist.tabla_distribucion_probabilidades(matrices, c1_der, c2_der, estado_actual, estados)
+                    p1 = distribucion_izq[1][1:]
+                    p2 = distribucion_der[1][1:]
+                    prod_tensor = self.prob_dist.producto_tensor(p1, p2)
+                    diferencia = self.prob_dist.calcular_emd(distribucion_particiones_original[1][1:], prod_tensor)
 
-        if isinstance(right_c1, tuple):
-            right_c1 = sum(right_c1, [])
-        if isinstance(right_c2, tuple):
-            right_c2 = sum(right_c2, [])
+                    if c2_der == [] and c1_der == []:
+                        continue
 
-        for i in range(len(left_c1) + 1):
-            c1_izq = left_c1[:i]
-            c1_der = left_c1[i:] + right_c1
-            for j in range(len(left_c2) + 1):
-                c2_izq = left_c2[:j]
-                c2_der = left_c2[j:] + right_c2
-                evaluate_partitions(c1_izq, c1_der, c2_izq, c2_der)
+                    elif diferencia < menor_diferencia:
+                        menor_diferencia = diferencia
+                        mejor_particion = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der))]
 
-        return mejor_particion, menor_diferencia, particiones_evaluadas
+                    aux = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der)), str(diferencia)]
+                    particiones_evaluadas.append(aux)
+
+        # Dividir los conjuntos en mitades y evaluar
+        mid1 = len(conjunto1) // 2
+        mid2 = len(conjunto2) // 2
+
+        c1_izq = conjunto1[:mid1]
+        c1_der = conjunto1[mid1:]
+        c2_izq = conjunto2[:mid2]
+        c2_der = conjunto2[mid2:]
+
+        # Evaluar particiones de las mitades divididas
+        divide_y_evaluar(c1_izq, c2_izq)
+        divide_y_evaluar(c1_der, c2_der)
+
+        # Evaluar particiones cruzadas
+        divide_y_evaluar(c1_izq, c2_der)
+        divide_y_evaluar(c1_der, c2_izq)
+
+        # Convertir las tuplas a cadenas de texto
+        df_lista_particiones = pd.DataFrame([
+            {
+                'Conjunto 1': str(particion[0]),
+                'Conjunto 2': str(particion[1]),
+                'Diferencia': particion[2]
+            }
+            for particion in particiones_evaluadas
+        ])
+
+        return mejor_particion, menor_diferencia, df_lista_particiones
+
+
     
     def crear_particiones(self, conjunto1, conjunto2, estadoActual):
         matrices = self.datos_mt()
