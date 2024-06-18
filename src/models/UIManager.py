@@ -270,44 +270,6 @@ class UIManager:
                     #self.estrategia2.pintarGrafoGenerado(c1, c2,estadoActual, st.session_state.nodes, st.session_state.edges,Node, Edge)
                     st.write(df)
                     
-                
-
-                st.write("## Inicio Estrategia")
-
-                futuros = PartitionGenerator.retornar_futuros()
-                estados = PartitionGenerator.retornar_estados()
-        
-                st.session_state.nodosG1 = st.multiselect("Seleccione los nodos del estado presente", estados, st.session_state.nodosG1)
-                st.session_state.nodosG2 = st.multiselect('Seleccione los nodos del estado futuro:', futuros, st.session_state.nodosG2)
-                st.session_state.estado_actual = st.selectbox("Seleccione el estado Actual: ", PartitionGenerator.retornar_valor_actual(st.session_state.nodosG1))
-                    
-                aux2 = []
-                for i in st.session_state.nodosG2:
-                     # verificar si el dato tiene ' al final por ejemplo "1'"
-                    if "'" in i:
-                        aux2.append(i[:-1])
-
-                if st.button("Solucionar"):
-                    st.session_state.aux = PartitionGenerator.retornar_distribucion(st.session_state.nodosG1, aux2, st.session_state.estado_actual, st)
-                    
-                # Convierte las listas a cadenas
-                nodosG1_str = ', '.join(st.session_state.nodosG1)
-                aux2_str = ', '.join(aux2)
-                st.latex(r'P(\{' + aux2_str + r'\}^{t+1} | \{' + nodosG1_str + r'\}^{t})')
-                st.header("Distribución de probabilidad")
-                if st.session_state.aux is not None:
-                        st.table(st.session_state.aux)
-                    
-                st.header("Particiones del grafo")
-                particionesGrafo, particiones = PartitionGenerator.generar_particiones(st.session_state.nodosG1, st.session_state.nodosG2)
-                st.table(particionesGrafo)
-                st.header("Mejor particion del grafo")
-                particion, valor, st.session_state.nodes, st.session_state.edges = PartitionGenerator.retornar_mejor_particion(
-                    st.session_state.nodosG1, aux2, st.session_state.estado_actual, st.session_state.nodes, st.session_state.edges, st)
-                st.write(particion)
-                st.header("Diferencia de la Mejor partición")
-                st.write(valor)
-                print(valor)
 
         elif navbar_selection == "Ventana":
             archivo_selection = st.sidebar.selectbox(
