@@ -11,8 +11,8 @@ import networkx as nx
 import io
 from networkx.algorithms.components import is_connected
 
-from Probabilidades.PartitionGenerator import PartitionGenerator
 
+from Probabilidades.ProbabilityDistribution import ProbabilityDistribution
 from .NodeManager import NodeManager
 from .EdgeManager import EdgeManager
 
@@ -448,13 +448,12 @@ class GraphManager:
 
         return nodes, edges
 
-    def generar_grafo_bipartito(self, numNodosConjunto1: int, numNodosConjunto2: int, Node, Edge):
-
+    def generar_grafoBipartito(self, conjunto1, conjunto2, Node, Edge):
+        # Crear un grafo bipartito
         G = nx.Graph()
-        G.add_nodes_from(numNodosConjunto1, bipartite=0)
-        G.add_nodes_from(numNodosConjunto2, bipartite=1)
-        G.add_edges_from(
-            [(n1, n2) for n1 in numNodosConjunto2 for n2 in numNodosConjunto2])
+        G.add_nodes_from(conjunto1, bipartite=0)
+        G.add_nodes_from(conjunto2, bipartite=1)
+        G.add_edges_from([(n1, n2) for n1 in conjunto1 for n2 in conjunto2])
 
         # Agregar pesos a las aristas
         for u, v in G.edges():
@@ -462,31 +461,25 @@ class GraphManager:
 
         # Definir las posiciones de los nodos en dos columnas verticales
         pos = {}
-        espacio_vertical = 1000 / (max(len(numNodosConjunto1), len(numNodosConjunto2)) + 1)
-        for i, nodo in enumerate(numNodosConjunto1, start=1):
+        espacio_vertical = 1000 / (max(len(conjunto1), len(conjunto2)) + 1)
+        for i, nodo in enumerate(conjunto1, start=1):
             pos[nodo] = [500, i * espacio_vertical]  # Columna izquierda
-        for i, nodo in enumerate(numNodosConjunto2, start=1):
+        for i, nodo in enumerate(conjunto2, start=1):
             pos[nodo] = [900, i * espacio_vertical]  # Columna derecha
 
         # Crear una lista de nodos con las nuevas coordenadas
-        nodes = [Node(id=str(nodo),
-                      label=str(nodo),
-                      shape=None,
-                      x=pos[nodo][0],  # Coordenada x asignada
-                      y=pos[nodo][1],  # Coordenada y asignada
-                      color='red' if nodo in numNodosConjunto1 else 'blue')  # Color de nodo
-                 for nodo in G.nodes()]
+        nodes = [Node(id=str(nodo), 
+                        label=str(nodo),
+                        shape=None,
+                        x=pos[nodo][0],  # Coordenada x asignada
+                        y=pos[nodo][1],  # Coordenada y asignada
+                        color='pink' if nodo in conjunto1 else 'lightblue')  # Color de nodo
+                    for nodo in G.nodes()]
 
         # Crear una lista de aristas
-        edges = [Edge(str(u), str(v), label=str(G.edges[u, v]['weight']), width=3, directed=False,
-                      type="dotted", weight=G.edges[u, v]['weight']) for u, v in G.edges()]
+        edges = [Edge(source=str(u), target=str(v), label=str(G.edges[u, v]['weight']), weight=G.edges[u, v]['weight'], type="CURVE_SMOOTH",width=3, directed=True)
+                for u, v in G.edges()]
 
-        # Configuración de la visualización del grafo
-        config = Config(height=600, width=800, directed=False,
-                        nodeHighlightBehavior=True, highlightColor="#F7A7A6", physics=False)
-
-        # Dibujar el grafo
-        agraph(nodes=nodes, edges=edges, config=config)
         # Retornar los nodos y aristas
         return nodes, edges
 
@@ -640,7 +633,7 @@ class GraphManager:
         return conjunto1, conjunto2, edges
 
     def grafoSoluciones(self, c1, c2, estadoActual, nodes, edges, st):
-        mP, a, b, c  = PartitionGenerator.retornar_mejor_particion(c1, c2, estadoActual)
+        mP, a, b, c  = ProbabilityDistribution.retornar_mejor_particion(c1, c2, estadoActual)
         p1, p2 = mP
         for i in p1[1]:
             if i not in p2[1]:

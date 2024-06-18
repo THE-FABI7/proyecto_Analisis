@@ -11,8 +11,6 @@ from streamlit_agraph import agraph, Node, Edge, Config
 import random
 from src.models.GraphExporter import GraphExporter
 from src.models.GraphManager import GraphManager
-#from src.Probabilidades.Estrategia import StateGraph
-from src.Probabilidades.PartitionGenerator import PartitionGenerator
 from src.models.NodeManager import NodeManager
 from src.models.EdgeManager import EdgeManager
 from src.Probabilidades.ProbabilityDistribution import ProbabilityDistribution
@@ -34,8 +32,9 @@ class UIManager:
             st.session_state.estado_actual = None
         if 'aux' not in st.session_state:
             st.session_state.aux = None
+        if 'candidatos' not in st.session_state:
+            st.session_state.candidatos = []
         self.prob_dist = ProbabilityDistribution()
-        self.partition_generator = PartitionGenerator(self.prob_dist)
         self.estrategia2 = Estrategia02()
         self.estrategia = Estrategia()
 
@@ -213,84 +212,64 @@ class UIManager:
                 st.title("Simulador de Transiciones de Estado")
                 st.sidebar.header("Configuración de Estados Actuales")
 
-        
-
-
                 st.write("## Inicio Estrategia")
 
-                futuros = self.partition_generator.retornar_futuros()
-                estados = self.partition_generator.retornar_estados()
-
-                st.session_state.nodosG1 = st.multiselect("Seleccione los nodos del estado presente", estados, st.session_state.nodosG1)
-                st.session_state.nodosG2 = st.multiselect('Seleccione los nodos del estado futuro:', futuros, st.session_state.nodosG2)
-                st.session_state.estado_actual = st.selectbox("Seleccione el estado Actual: ", self.partition_generator.retornar_valor_actual(st.session_state.nodosG1))
-
-                #st.session_state.estado_actual = st.selectbox("Seleccione el estado Actual: ", self.estrategia.retornarValorActual(st.session_state.nodosG1, st.session_state.nodosG2))
-                                
-                aux2 = []
-                for i in st.session_state.nodosG2:
-                    # verificar si el dato tiene ' al final por ejemplo "1'"
-                    if "'" in i:
-                        aux2.append(i[:-1])
+                estados_presentes = st.multiselect("Seleccione los estados presentes", self.prob_dist.retornar_estados())
+                estados_futuros = st.multiselect("Seleccione los estados futuros", self.prob_dist.retornar_futuros())
+                estado_actual = st.selectbox("Seleccione el estado actual", self.prob_dist.retornarValorActual(estados_presentes, estados_futuros))
+                
+                st.session_state.nodes, st.session_state.edges = self.graph_manager.generar_grafoBipartito(estados_presentes, estados_futuros, Node, Edge)
+                
+                st.write("Nodos del estado presente después del filtro:", estados_presentes)
+                                        
+                nodosG2_filtrados = [i[:-1] if "'" in i else i for i in estados_futuros]
 
                 if st.button("Solucionar"):
-                    st.session_state.aux = self.estrategia.retornar_distribuciones(st.session_state.nodosG1, aux2, st.session_state.estado_actual, st)
-                    #st.session_state.aux = self.partition_generator.retornar_distribucion(st.session_state.nodosG1, aux2, st.session_state.estado_actual)
+                    st.session_state.aux = self.estrategia.retornar_distribuciones(estados_presentes, nodosG2_filtrados, estado_actual, st)
 
-                # Convierte las listas a cadenas
-                nodosG1_str = ', '.join(st.session_state.nodosG1)
-                aux2_str = ', '.join(aux2)
-                st.latex(r'P(\{' + aux2_str + r'\}^{t+1} | \{' + nodosG1_str + r'\}^{t})')
+                nodosG1_str = ', '.join(estados_presentes)
+                nodosG2_filtrados_str = ', '.join(nodosG2_filtrados)
+                st.latex(r'P(\{' + nodosG2_filtrados_str + r'\}^{t+1} | \{' + nodosG1_str + r'\}^{t})')
+                
                 st.header("Distribución de probabilidad")
                 if st.session_state.aux is not None:
-                    st.table(st.session_state.aux)
+                    st.write(st.session_state.aux)
 
                 st.header("Particiones del grafo")
-                #particionesGrafo, particiones = self.partition_generator.generar_particiones(st.session_state.nodosG1, st.session_state.nodosG2)
-                particionesGrafo, particiones = self.estrategia.crear_particiones(st.session_state.nodosG1, st.session_state.nodosG2,st.session_state.estado_actual)
-                st.header("Mejor particion del grafo")
-                #particion, valor, st.session_state.nodes, st.session_state.edges = self.partition_generator.retornar_mejor_particion(
-                #st.session_state.nodosG1, aux2, st.session_state.estado_actual, st.session_state.nodes, st.session_state.edges, st)
-                #particion, valor = self.partition_generator.dividir_y_vencer(st.session_state.nodosG1, aux2, distribuciones)
-                st.write(particionesGrafo)
-                st.header("Mejor particion estrategia 1")
-                particion, d, lista = self.estrategia.retornar_particion_adecuada(st.session_state.nodosG1, aux2, st.session_state.estado_actual)
-                st.write(str(particion), d)
-                self.estrategia.dibujar_grafo(st.session_state.nodosG1, aux2, st.session_state.estado_actual, st.session_state.nodes, st.session_state.edges, st)
+                particiones_grafo, particiones = self.estrategia.crear_particiones(estados_presentes, estados_futuros, estado_actual)
+                st.write(particiones_grafo)
+
+                st.header("Mejor partición del grafo")
+                particion_adecuada, d, lista = self.estrategia.retornar_particion_adecuada(estados_presentes, nodosG2_filtrados, estado_actual)
+                st.write(str(particion_adecuada), d)
+                
+                self.estrategia.dibujar_grafo(estados_presentes, nodosG2_filtrados, estado_actual, st.session_state.nodes, st.session_state.edges, Node, Edge)
 
 
             if archivo_selection == "Estrategia 2":
-                st.header("Estrategia 2")
-            
-                futuros = self.partition_generator.retornar_futuros()
-                estados = self.partition_generator.retornar_estados()
+                c1 = st.multiselect("Seleccione los estados presentes", self.prob_dist.retornar_estados())
+                c2 = st.multiselect("Seleccione los estados futuros", self.prob_dist.retornar_futuros())
+                estadoActual = st.selectbox("Seleccione el estado actual", self.prob_dist.retornarValorActual(c1, c2))
+                st.session_state.nodes, st.session_state.edges = self.graph_manager.generar_grafoBipartito(c1, c2, Node, Edge)
 
-                numNodosG1 = st.session_state.nodosG1 = st.multiselect("Seleccione los nodos del estado presente", estados, st.session_state.nodosG1)
-                numNodosG2 = st.session_state.nodosG2 = st.multiselect('Seleccione los nodos del estado futuro:', futuros, st.session_state.nodosG2)
-
-                print("Nodos G1" + str(numNodosG1))
-                print("Nodos G2" + str(numNodosG2))
-                st.session_state.estado_actual = st.selectbox("Seleccione el estado Actual: ", self.partition_generator.retornar_valor_actual(st.session_state.nodosG1))
-
-                nodes = [Node(id=str(i), label=f"Node {i}") for i in range(len(numNodosG1) + len(numNodosG2))]
-                edges = [Edge(source=str(i), target=str(i+1)) for i in range(len(numNodosG1) + len(numNodosG2) - 1)]
-
-                st.session_state.nodes = nodes
-                st.session_state.edges = edges
-
-                if st.button("Calcular probabilidad"):
-                    c1 = numNodosG1
-                    c2 = numNodosG2
-                    estadosActual = st.session_state.estado_actual
-
-                    mejor_particion, menor_diferencia, tiempo_ejecucion, lista_particiones_evaluadas, eliminadas = self.estrategia2.estrategia2(c1, c2, estadosActual, st.session_state.edges)
-
+                aux3 =[]
+                for i in c2:
+                    # verificar si el dato tiene ' al final por ejemplo "1'"
+                    if "'" in i:
+                        aux3.append(i[:-1])
+                if st.button("Calcular segunda estrategia"):
                     st.header("Mejor particion estrategia 2")
-                    
-                    st.write(str(mejor_particion), menor_diferencia)
+                    particionn, diferencia, lista,l = self.estrategia2.estrategia2(c1, c2, estadoActual, st.session_state.edges)
+                    st.write(str(particionn), diferencia)
+                    st.header("Distribuciones del grafo")
+                    st.session_state.aux = self.estrategia.retornar_distribuciones(c1, c2, estadoActual, st)
+                    if st.session_state.aux is not None:
+                        st.write(st.session_state.aux)
                     st.header("Particiones del grafo")
-                    df, particiones  = self.estrategia2.generarParticiones(c1, c2, estadosActual, st.session_state.edges)
-                    self.estrategia2.dibujar_Grafo(c1, c2, estadosActual, nodes, edges, Node, Edge)
+                    df, particiones  = self.estrategia2.crear_particiones(c1, c2, estadoActual, st.session_state.edges)
+                    #self.estrategia2.pintarGrafoGenerado(c1, c2,estadoActual, st.session_state.nodes, st.session_state.edges,Node, Edge)
+                    st.write(df)
+                    
                 
 
         elif navbar_selection == "Ventana":

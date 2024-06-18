@@ -7,6 +7,6 @@ class Utilities:
             inicio = time.time()
             resultado = func(*args, **kwargs)
             fin = time.time()
-            print(f"Tiempo de ejecución de {func.__name__}: {fin - inicio:.4f} segundos")
+            print(f"Tiempo de ejecución: {fin - inicio:.4f} segundos")
             return resultado
         return wrapper

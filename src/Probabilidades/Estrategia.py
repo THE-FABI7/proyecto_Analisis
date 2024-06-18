@@ -3,11 +3,14 @@ import numpy as np
 from Data.datapb.NodeDataRetrieve import NodeDataRetriever
 from scipy.stats import wasserstein_distance
 import pandas as pd
+from src.Probabilidades.Utilities import Utilities
 import streamlit_agraph as stag
 from Probabilidades.visualizer import Gui
+from src.Probabilidades.ProbabilityDistribution import ProbabilityDistribution
 
 class Estrategia:
     def __init__(self):
+        self.prob_dist = ProbabilityDistribution()
         pass
     
     def datos_mt(self):
@@ -16,36 +19,12 @@ class Estrategia:
 
     def retornar_particion_adecuada(self, conjunto1, conjunto2, estadoActual):
         matrices = self.datos_mt()
-        resultado, estados = self.genera_estados_transicion(matrices)
-        distribucion_particiones_original = self.tabla_distribucion_probabilidades(matrices, conjunto1, conjunto2, estadoActual, estados)
+        resultado, estados = self.prob_dist.crear_estados_transicion(matrices)
+        distribucion_particiones_original = self.prob_dist.tabla_distribucion_probabilidades(matrices, conjunto1, conjunto2, estadoActual, estados)
         particion, diferencia, lista = self.planteamiento_voraz(matrices, estados, distribucion_particiones_original, conjunto1, conjunto2, estadoActual)
         return particion, diferencia, lista
 
-    def genera_estados_transicion(self, subconjuntos):
-        estados = list(subconjuntos.keys())
-        transiciones = {}
-        estado_actual = [0] * len(estados)
-        return transiciones, estados
-    
-    def producto_tensor(self, p1, p2):
-        p1 = np.array(p1)
-        p2 = np.array(p2)
-        return np.outer(p1, p2).flatten()
-    
-    def calcular_emd(self, p1, p2):
-        p1 = np.array(p1)
-        p2 = np.array(p2)
-
-        if p1.ndim != 1 or p2.ndim != 1:
-            raise ValueError("p1 y p2 deben ser arrays unidimensionales")
-
-        if len(p1) != len(p2):
-            p2 = np.interp(np.linspace(0, 1, len(p1)), np.linspace(0, 1, len(p2)), p2)
-        
-        cost_matrix = np.abs(np.subtract.outer(p1, p2))
-        salida = np.sum(np.min(cost_matrix, axis=1) * p1)
-        return salida
-
+    @Utilities.medir_tiempo
     def planteamiento_voraz(self, matrices, estados, distribucion_particiones_original, conjunto1, conjunto2, estadoActual):
         mejor_particion = []
         menor_diferencia = float('inf')
@@ -60,18 +39,13 @@ class Estrategia:
                 c2_izq.append(c2_der.pop(0))
 
                 inicio = time.time()
-                distribucion_izq = self.tabla_distribucion_probabilidades(matrices, c1_izq, c2_izq, estadoActual, estados)
-                distribucion_der = self.tabla_distribucion_probabilidades(matrices, c1_der, c2_der, estadoActual, estados)
+                distribucion_izq = self.prob_dist.tabla_distribucion_probabilidades(matrices, c1_izq, c2_izq, estadoActual, estados)
+                distribucion_der = self.prob_dist.tabla_distribucion_probabilidades(matrices, c1_der, c2_der, estadoActual, estados)
                 p1 = distribucion_izq[1][1:]
                 p2 = distribucion_der[1][1:]
-                prodTensor = self.producto_tensor(p1, p2)
-                diferencia = self.calcular_emd(distribucion_particiones_original[1][1:], prodTensor)
+                prodTensor = self.prob_dist.producto_tensor(p1, p2)
+                diferencia = self.prob_dist.calcular_emd(distribucion_particiones_original[1][1:], prodTensor)
                 fin = time.time()
-
-                print("--------------------")
-                print("diferencia", diferencia)
-                print("mejor_particion", mejor_particion)
-                print("--------------------")
 
                 if c2_der == [] and c1_der == []:
                     continue
@@ -82,114 +56,67 @@ class Estrategia:
                 
                 aux = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der)), str(diferencia)]
                 particiones_evaluadas.append(aux)
+
+                print("--------------------")
+                print("diferencia", diferencia)
+                print("mejor_particion", mejor_particion)
+                print("--------------------")
                 
         return mejor_particion, menor_diferencia, particiones_evaluadas
     
-    def busqueda_divide_y_venceras(self, matrices, estados, distribucion_particiones_original, conjunto1, conjunto2, estadoActual):
-        if len(conjunto1) == 0 or len(conjunto2) == 0:
-            return [], float('inf'), []
+    def divide_y_venceras(self, matrices, estados, distribucion_particiones_original, conjunto1, conjunto2, estado_actual):
+        def merge_sort_partition(conjunto):
+            if len(conjunto) <= 1:
+                return conjunto
+            mid = len(conjunto) // 2
+            left_half = merge_sort_partition(conjunto[:mid])
+            right_half = merge_sort_partition(conjunto[mid:])
+            return left_half, right_half
 
-        if len(conjunto1) == 1 and len(conjunto2) == 1:
-            distribucion = self.tabla_distribucion_probabilidades(matrices, conjunto1, conjunto2, estadoActual, estados)
-            p1 = distribucion[1][1:]
-            prodTensor = self.producto_tensor(p1, p1)
-            diferencia = self.calcular_emd(distribucion_particiones_original[1][1:], prodTensor)
-            return [(tuple(conjunto2), tuple(conjunto1))], diferencia, [(tuple(conjunto2), tuple(conjunto1), str(diferencia))]
+        def evaluate_partitions(c1_izq, c1_der, c2_izq, c2_der):
+            nonlocal menor_diferencia, mejor_particion
+            distribucion_izq = self.prob_dist.tabla_distribucion_probabilidades(matrices, c1_izq, c2_izq, estado_actual, estados)
+            distribucion_der = self.prob_dist.tabla_distribucion_probabilidades(matrices, c1_der, c2_der, estado_actual, estados)
+            p1 = distribucion_izq[1][1:]
+            p2 = distribucion_der[1][1:]
+            prod_tensor = self.prob_dist.producto_tensor(p1, p2)
+            diferencia = self.prob_dist.calcular_emd(distribucion_particiones_original[1][1:], prod_tensor)
 
-        mid1 = len(conjunto1) // 2
-        mid2 = len(conjunto2) // 2
+            if diferencia < menor_diferencia:
+                menor_diferencia = diferencia
+                mejor_particion = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der))]
 
-        c1_izq = conjunto1[:mid1]
-        c1_der = conjunto1[mid1:]
-        c2_izq = conjunto2[:mid2]
-        c2_der = conjunto2[mid2:]
+            particiones_evaluadas.append([(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der)), str(diferencia)])
 
-        mejor_particion_izq, menor_diferencia_izq, lista_izq = self.busqueda_divide_y_venceras(matrices, estados, distribucion_particiones_original, c1_izq, c2_izq, estadoActual)
-        mejor_particion_der, menor_diferencia_der, lista_der = self.busqueda_divide_y_venceras(matrices, estados, distribucion_particiones_original, c1_der, c2_der, estadoActual)
+        mejor_particion = []
+        menor_diferencia = float('inf')
+        particiones_evaluadas = []
 
-        if menor_diferencia_izq < menor_diferencia_der:
-            mejor_particion = mejor_particion_izq
-            menor_diferencia = menor_diferencia_izq
-            lista_particiones = lista_izq
-        else:
-            mejor_particion = mejor_particion_der
-            menor_diferencia = menor_diferencia_der
-            lista_particiones = lista_der
+        left_c1, right_c1 = merge_sort_partition(conjunto1)
+        left_c2, right_c2 = merge_sort_partition(conjunto2)
 
-        inicio = time.time()
-        distribucion_izq_der = self.tabla_distribucion_probabilidades(matrices, c1_izq, c2_der, estadoActual, estados)
-        distribucion_der_izq = self.tabla_distribucion_probabilidades(matrices, c1_der, c2_izq, estadoActual, estados)
-        p1 = distribucion_izq_der[1][1:]
-        p2 = distribucion_der_izq[1][1:]
-        prodTensor = self.producto_tensor(p1, p2)
-        diferencia_cruzada = self.calcular_emd(distribucion_particiones_original[1][1:], prodTensor)
-        fin = time.time()
+        print("left_c1", left_c1)
+        print("right_c1", right_c1)
+        print("C", left_c2)
+        print("right_c2", right_c2)
 
-        if diferencia_cruzada < menor_diferencia:
-            menor_diferencia = diferencia_cruzada
-            mejor_particion = [(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der))]
-            lista_particiones.append([(tuple(c2_izq), tuple(c1_izq)), (tuple(c2_der), tuple(c1_der)), str(diferencia_cruzada), str(fin - inicio)])
+        left_c2_filtrado = [i[:-1] if "'" in i else i for i in left_c2]
+        right_c2_filtrado = [i[:-1] if "'" in i else i for i in right_c2]
 
-        return mejor_particion, menor_diferencia, lista_particiones
+        if isinstance(right_c1, tuple):
+            right_c1 = sum(right_c1, [])
+        if isinstance(right_c2, tuple):
+            right_c2 = sum(right_c2, [])
 
-    def tabla_distribucion_probabilidades(self, tabla, estadoActual, estadoFuturo, num, estados):
-        indice = [estados.index(i) for i in estadoActual]
-        prob_distribuidas = []
-        for i in estadoFuturo:
-            if "'" in i:
-                i = i[:-1]
-            nuevaTabla = self.crear_tabla_comparativa(tabla[i])
-            filtro2 = self.porcentajes_distribuciones(nuevaTabla, indice, num)
-            prob_distribuidas.append(filtro2)
-        tabla = self.crear_tabla(prob_distribuidas, num)
-        tabla[0] = [[estadoFuturo, estadoActual]] + tabla[0]
-        tabla[1] = [num] + tabla[1]
-        return tabla
+        for i in range(len(left_c1) + 1):
+            c1_izq = left_c1[:i]
+            c1_der = left_c1[i:] + right_c1
+            for j in range(len(left_c2) + 1):
+                c2_izq = left_c2[:j]
+                c2_der = left_c2[j:] + right_c2
+                evaluate_partitions(c1_izq, c1_der, c2_izq, c2_der)
 
-    def crear_tabla_comparativa(self, diccionario):
-        lista = [['key', (1,), (0,)]]
-        for k, v in diccionario.items():
-            lista.append([k, v, 1 - v])
-        return lista
-    
-    def porcentajes_distribuciones(self, tabla, indice, num):
-        tablaNueva = [tabla[0]]
-        fila = None
-        try:
-            tabla1 = [fila for fila in tabla[1:] if all(i < len(num) and pos < len(fila[0]) and fila[0][pos] == num[i] for i, pos in enumerate(indice))]
-        except IndexError as e:
-            print(f"IndexError: {e}")
-            raise
-
-        nuevosValores = [0, 0]
-        for i in tabla1:
-            nuevosValores[0] += i[1]
-            nuevosValores[1] += i[2]
-
-        total = sum(nuevosValores)
-        nuevosValores = [v / total if total != 0 else v for v in nuevosValores]
-        nuevaFila = [num, *nuevosValores]
-        tablaNueva.append(nuevaFila)
-        return tablaNueva
-    
-    def crear_tabla(self, distribucion, num, i=0, numBinario ='', nuevoValor=1):
-        if i == len(distribucion):
-            numBinario = '0' * (len(distribucion)-len(numBinario)) + numBinario
-            nuevoDato = tuple(int(bit) for bit in numBinario)
-            return [[nuevoDato], [nuevoValor]]
-        else:
-            tabla = self.crear_tabla(distribucion, num, i+1, numBinario+'0', nuevoValor*distribucion[i][1][2])
-            tabla2 = self.crear_tabla(distribucion, num, i+1, numBinario+'1', nuevoValor*distribucion[i][1][1])
-            return [tabla[0]+tabla2[0], tabla[1]+tabla2[1]]
-
-    def retornarValorActual(self, conjunto1, conjunto2):
-        lista = []
-        matrices = self.datos_mt()
-        
-        for j in matrices['A']:
-            lista.append(j)
-        
-        return lista
+        return mejor_particion, menor_diferencia, particiones_evaluadas
     
     def crear_particiones(self, conjunto1, conjunto2, estadoActual):
         matrices = self.datos_mt()
@@ -200,8 +127,8 @@ class Estrategia:
     
     def retornar_distribuciones(self, eActual, eFuturo, valorActual, st):
         matrices = self.datos_mt()
-        resultado, estados = self.genera_estados_transicion(matrices)
-        datos = self.tabla_distribucion_probabilidades(matrices, eActual, eFuturo, valorActual, estados)
+        resultado, estados = self.prob_dist.crear_estados_transicion(matrices)
+        datos = self.prob_dist.tabla_distribucion_probabilidades(matrices, eActual, eFuturo, valorActual, estados)
         lista = []
         lista.append(str(datos[0][0]))
             

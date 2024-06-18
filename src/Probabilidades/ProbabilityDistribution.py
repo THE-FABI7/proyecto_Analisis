@@ -25,8 +25,8 @@ class ProbabilityDistribution:
             if "'" in i:
                 i = i[:-1]
             nueva_tabla = self.crear_tabla_comparativa(tabla[i])
-            filtro2 = self.porcentajes_distribuciones(nueva_tabla, indice, num)
-            prob_distribuidas.append(filtro2)
+            filtrar = self.porcentajes_distribuciones(nueva_tabla, indice, num)
+            prob_distribuidas.append(filtrar)
         tabla = self.crear_tabla(prob_distribuidas, num)
         tabla[0] = [[estadoFuturo, estadoActual]] + tabla[0]
         tabla[1] = [num] + tabla[1]
@@ -116,11 +116,16 @@ class ProbabilityDistribution:
         p2 = np.array(p2)
         
         # Asegurarse de que p2 sea una matriz 2D para la iteración
-        if p2.ndim == 1:
-            p2 = p2.reshape(-1, 1)
+        if p1.ndim != 1 or p2.ndim != 1:
+            raise ValueError("p1 y p2 deben ser arrays unidimensionales")
 
-        diferencias = [wasserstein_distance(p1, p2_row) for p2_row in p2]
-        return diferencias
+        # Ajusta p2 para que tenga la misma longitud que p1
+        if len(p1) != len(p2):
+            p2 = np.interp(np.linspace(0, 1, len(p1)), np.linspace(0, 1, len(p2)), p2)
+        
+        cost_matrix = np.abs(np.subtract.outer(p1, p2))
+        salida = np.sum(np.min(cost_matrix, axis=1) * p1)
+        return salida
 
     def producto_tensor(self, p1, p2):
         """
@@ -137,3 +142,96 @@ class ProbabilityDistribution:
         p2 = np.array(p2)
         #resultado = np.outer(p1, p2)
         return np.outer(p1, p2).flatten()
+    
+# Particiones de Generador de Probabilidades
+
+
+    def retornar_candidatos(self):
+        """
+        Retorna los estados del sistema.
+
+        Returns:
+            list: Lista de estados.
+        """
+        datos = self.datos_mt()
+        resultado, estados = self.crear_estados_transicion(datos)
+        return estados
+    
+    def crear_estados_transicion(self, subconjuntos):
+        estados = list(subconjuntos.keys())
+        transiciones = {}
+        estado_actual = [0] * len(estados)
+
+        def aux(i):
+            if i == len(estados):
+                estado_actual_tuple = tuple(estado_actual)
+                estado_futuro = tuple(subconjuntos[estado][estado_actual_tuple] for estado in estados)
+                transiciones[estado_actual_tuple] = estado_futuro
+            else:
+                estado_actual[i] = 0
+                aux(i + 1)
+                estado_actual[i] = 1
+                aux(i + 1)
+        aux(0)
+        return transiciones, estados
+    
+    def retornar_futuros(self):
+        """
+        Retorna los estados futuros del sistema.
+
+        Returns:
+            list: Lista de estados futuros.
+        """
+        datos = self.datos_mt()
+        resultado, estados = self.crear_estados_transicion(datos)
+        for i in range(len(estados)):
+            estados[i] = estados[i] + "'"
+        return estados
+    
+    def retornar_estados(self):
+        """
+        Retorna los estados del sistema.
+
+        Returns:
+            list: Lista de estados.
+        """
+        datos = self.datos_mt()
+        resultado, estados = self.crear_estados_transicion(datos)
+        return estados
+
+    def retornarValorActual(self, conjunto1, conjunto2):
+        lista = []
+        matrices = self.datos_mt()
+        
+        for j in matrices['A']:
+            lista.append(j)
+        
+        return lista
+    
+    def retornar_distribucion(self, estado_actual, estado_futuro, valor_actual):
+        """
+        Retorna la distribución de probabilidades para los estados actuales y futuros.
+
+        Args:
+            estado_actual (list): Estado actual.
+            estado_futuro (list): Estado futuro.
+            valor_actual (tuple): Valor actual.
+
+        Returns:
+            DataFrame: DataFrame con la distribución de probabilidades.
+        """
+
+        matrices = self.datos_mt()
+        resultado, estados = self.crear_estados_transicion(matrices)
+
+
+        datos = self.tabla_distribucion_probabilidades(
+            matrices, estado_actual, estado_futuro, valor_actual, estados)
+        lista = []
+        lista.append(str(datos[0][0]))
+
+        for i in range(len(datos[0][1:])):
+            lista.append(str(datos[0][1:][i]))
+
+        df = pd.DataFrame(datos[1:], columns=lista)
+        return df
