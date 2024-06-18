@@ -84,7 +84,7 @@ class EdgeManager:
             # Define `update_key` aquí para usarlo en el botón de actualizar.
             update_key = f"update_edge_{edge_index}"
             if st.button("Actualizar Arista", key=update_key):  # Clave única para el botón
-                print("Entra en la condicion")
+               
                 selected_edge = st.session_state['edges'][edge_index]
                 selected_edge.label = str(new_weight)
                 selected_edge.weight = new_weight  # Asegúrate de que la clase Edge tenga este atributo.
@@ -98,7 +98,6 @@ class EdgeManager:
                 #self.redibujar_grafo()
         
     def redibujar_grafo(self):
-        print("Redubuja el grafo")
         nodes = st.session_state['nodes']
         edges = st.session_state['edges']
         config = Config(width=900, height=900, directed=False, nodeHighlightBehavior=True, physics=False)

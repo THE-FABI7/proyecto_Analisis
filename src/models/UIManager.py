@@ -1,3 +1,5 @@
+from Probabilidades.Estrategia02 import Estrategia02
+from Probabilidades.Estrategia import Estrategia
 from streamlit_agraph import Node, Edge
 import os
 import streamlit as st
@@ -9,8 +11,8 @@ from streamlit_agraph import agraph, Node, Edge, Config
 import random
 from src.models.GraphExporter import GraphExporter
 from src.models.GraphManager import GraphManager
-from src.Probabilidades.StateGraph import StateGraph
-from src.Probabilidades.PartitionGenerator import PartitionGenerator
+from src.models.NodeManager import NodeManager
+from src.models.EdgeManager import EdgeManager
 from src.Probabilidades.ProbabilityDistribution import ProbabilityDistribution
 
 
@@ -18,7 +20,10 @@ class UIManager:
 
     def __init__(self):
         self.graph_manager = GraphManager()
+        graph = self.graph_manager.get_graph()
         self.exporter = GraphExporter()
+        self.node_manager = NodeManager(graph)
+        self.edge_manager = EdgeManager(graph)
         if 'nodosG1' not in st.session_state:
             st.session_state.nodosG1 = []
         if 'nodosG2' not in st.session_state:
@@ -27,6 +32,11 @@ class UIManager:
             st.session_state.estado_actual = None
         if 'aux' not in st.session_state:
             st.session_state.aux = None
+        if 'candidatos' not in st.session_state:
+            st.session_state.candidatos = []
+        self.prob_dist = ProbabilityDistribution()
+        self.estrategia2 = Estrategia02()
+        self.estrategia = Estrategia()
 
     def load_css(self):
         with open('styles.css', 'r') as css:
@@ -77,7 +87,7 @@ class UIManager:
         archivo_options = ["nuevo grafo", "Abrir", "Cerrar", "Guardar",
                            "Guardar como", "Exportar datos", "Importar datos", "Salir"]
         editar_options = ["Deshacer", "Arco", "Nodo"]
-        ejecutar_options = ["procesos", "probabilidades"]
+        ejecutar_options = ["procesos", "Estrategia 1", "Estrategia 2"]
         ventana_options = ["Gráfica", "Tabla"]
         ayuda_options = ["Ayuda", "Acerca de Grafos"]
         # Usa un archivo de imagen y muéstralo en el encabezado de la barra lateral usando st.image.
@@ -163,10 +173,20 @@ class UIManager:
             if archivo_selection == "Deshacer":
                 st.write("Has seleccionado la Sub opción 1")
             if archivo_selection == "Nodo":
+                st.sidebar.header("Nodos Edit")
+                self.node_manager.agregar_nodo()
+                self.node_manager.editar_nodo(st)
+                self.node_manager.buscarNodo(st)
+                self.node_manager.eliminar_nodo(st)
                 self.graph_manager.buscarNodo(st)
             if archivo_selection == "Arco":
-                st.write("Has seleccionado la Sub opción arco")
-
+                st.sidebar.header("Arco edit")
+                self.edge_manager.gestionar_aristas()
+                self.edge_manager.editarArista()
+                self.edge_manager.eliminarArista()
+                
+        
+            
         elif navbar_selection == "Ejecutar":
             archivo_selection = st.sidebar.selectbox(
                 "Opciones", ejecutar_options)
@@ -187,84 +207,70 @@ class UIManager:
                         st.session_state.nodes, st.session_state.edges)
                     st.text(salida)
 
-            if archivo_selection == "probabilidades":
-                st.write("Has seleccionado la opción de Probabilidades")
+            if archivo_selection == "Estrategia 1":
+                st.write("Has seleccionado la opción de Estrategia 1")
                 st.title("Simulador de Transiciones de Estado")
                 st.sidebar.header("Configuración de Estados Actuales")
 
-                # Obtenemos el path al archivo JSON a través de GraphManager
-                # Esto debería retornar el path al archivo JSON
-                datos_json = self.graph_manager.abrir_grafo()
+                st.write("## Inicio Estrategia")
 
-                print(datos_json)
+                estados_presentes = st.multiselect("Seleccione los estados presentes", self.prob_dist.retornar_estados())
+                estados_futuros = st.multiselect("Seleccione los estados futuros", self.prob_dist.retornar_futuros())
+                estado_actual = st.selectbox("Seleccione el estado actual", self.prob_dist.retornarValorActual(estados_presentes, estados_futuros))
+                
+                st.session_state.nodes, st.session_state.edges = self.graph_manager.generar_grafoBipartito(estados_presentes, estados_futuros, Node, Edge)
+                
+                st.write("Nodos del estado presente después del filtro:", estados_presentes)
+                                        
+                nodosG2_filtrados = [i[:-1] if "'" in i else i for i in estados_futuros]
 
-                if datos_json is not None:
-                    # Permitir al usuario definir los estados actuales de A, B, y C
-                    estado_a = st.sidebar.radio("Estado A", [0, 1], key="a")
-                    estado_b = st.sidebar.radio("Estado B", [0, 1], key="b")
-                    estado_c = st.sidebar.radio("Estado C", [0, 1], key="c")
-                    estados_actuales = [estado_a, estado_b, estado_c]
+                if st.button("Solucionar"):
+                    st.session_state.aux = self.estrategia.retornar_distribuciones(estados_presentes, nodosG2_filtrados, estado_actual, st)
 
-                    # Asumiendo que tienes un archivo JSON
-                    datos_json = "Data/complete_bipartite_graph.json"
-                    graph = StateGraph(datos_json)
-                    graph.cargar_datos()
-                futuros = PartitionGenerator.retornar_Futuros(self)
-                estados = PartitionGenerator.retornar_Estados(self)
-                nodosG1 = st.multiselect(
-                    "Seleccione los nodos del estado presente", estados)
-                nodosG2 = st.multiselect(
-                    'Seleccione los nodos del estado futuro:', futuros)
-                estadoActual = st.selectbox(
-                    "Seleccione el estado Actual: ", PartitionGenerator.retornarValorActual(self, nodosG1))
-                st.session_state.nodes, st.session_state.edges = GraphManager.generar_grafo_bipartito(
-                    self, nodosG1, nodosG2, Node, Edge)
+                nodosG1_str = ', '.join(estados_presentes)
+                nodosG2_filtrados_str = ', '.join(nodosG2_filtrados)
+                st.latex(r'P(\{' + nodosG2_filtrados_str + r'\}^{t+1} | \{' + nodosG1_str + r'\}^{t})')
+                
+                st.header("Distribución de probabilidad")
+                if st.session_state.aux is not None:
+                    st.write(st.session_state.aux)
 
-                aux2 = []
-                for i in nodosG2:
+                st.header("Particiones del grafo")
+                particiones_grafo, particiones = self.estrategia.crear_particiones(estados_presentes, estados_futuros, estado_actual)
+                st.write(particiones_grafo)
+
+                st.header("Mejor partición del grafo")
+                particion_adecuada, d, lista = self.estrategia.retornar_particion_adecuada(estados_presentes, nodosG2_filtrados, estado_actual)
+                st.write(str(particion_adecuada), d)
+                
+                self.estrategia.dibujar_grafo(estados_presentes, nodosG2_filtrados, estado_actual, st.session_state.nodes, st.session_state.edges, Node, Edge)
+
+
+            if archivo_selection == "Estrategia 2":
+                c1 = st.multiselect("Seleccione los estados presentes", self.prob_dist.retornar_estados())
+                c2 = st.multiselect("Seleccione los estados futuros", self.prob_dist.retornar_futuros())
+                estadoActual = st.selectbox("Seleccione el estado actual", self.prob_dist.retornarValorActual(c1, c2))
+                st.session_state.nodes, st.session_state.edges = self.graph_manager.generar_grafoBipartito(c1, c2, Node, Edge)
+
+                aux3 =[]
+                for i in c2:
                     # verificar si el dato tiene ' al final por ejemplo "1'"
                     if "'" in i:
-                        aux2.append(i[:-1])
-                if st.button("Solucionar"):
-                    aux = PartitionGenerator.retornarDistribucion(self,
-                        nodosG1, aux2, estadoActual, st)
-
-                    # Convierte las listas a cadenas
-                    nodosG1_str = ', '.join(nodosG1)
-                    aux2_str = ', '.join(aux2)
-                    st.latex(
-                        r'P(\{' + aux2_str + r'\}^{t+1} | \{' + nodosG1_str + r'\}^{t})')
-                    st.header("Distribución de probabilidad")
-                    st.table(aux)
+                        aux3.append(i[:-1])
+                if st.button("Calcular segunda estrategia"):
+                    st.header("Mejor particion estrategia 2")
+                    particionn, diferencia, lista,l = self.estrategia2.estrategia2(c1, c2, estadoActual, st.session_state.edges)
+                    st.write(str(particionn), diferencia)
+                    st.header("Distribuciones del grafo")
+                    st.session_state.aux = self.estrategia.retornar_distribuciones(c1, c2, estadoActual, st)
+                    if st.session_state.aux is not None:
+                        st.write(st.session_state.aux)
                     st.header("Particiones del grafo")
-                    particionesGrafo, particiones = PartitionGenerator.generar_particiones(self,
-                        nodosG1, nodosG2)
-                    st.table(particionesGrafo)
-                    st.header("Mejor particion del grafo")
-                    particion, valor, st.session_state.nodes, st.session_state.edges = PartitionGenerator.retornarMejorParticion(self,
-                        nodosG1, aux2, estadoActual, st.session_state.nodes, st.session_state.edges, st)
-                    st.header("Diferencia de la Mejor partición")
-                    st.write(valor)
-
-                if st.sidebar.button("Simular Transiciones"):
-                    resultados = graph.obtener_estado_futuro_probabilidad(
-                        estados_actuales)
-
-                    st.write("## Resultados de la Simulación:")
-
-                    # Crear un nuevo DataFrame solo para mostrar en la interfaz
-                    datos_para_mostrar = pd.DataFrame({
-                        "Estado Actual": [resultados['Estado Actual'].iloc[0]],
-                        "Estado Futuro A": [resultados['Estado Futuro A'].iloc[0]],
-                        "Probabilidad A": [resultados['Probabilidad A'].iloc[0]],
-                        "Estado Futuro B": [resultados['Estado Futuro B'].iloc[0]],
-                        "Probabilidad B": [resultados['Probabilidad B'].iloc[0]],
-                        "Estado Futuro C": [resultados['Estado Futuro C'].iloc[0]],
-                        "Probabilidad C": [resultados['Probabilidad C'].iloc[0]]
-                    }, index=[0])
-
-                    # Mostrar el DataFrame con Streamlit
-                    st.dataframe(datos_para_mostrar)
+                    df, particiones  = self.estrategia2.crear_particiones(c1, c2, estadoActual, st.session_state.edges)
+                    #self.estrategia2.pintarGrafoGenerado(c1, c2,estadoActual, st.session_state.nodes, st.session_state.edges,Node, Edge)
+                    st.write(df)
+                    
+                
 
                 st.write("## Inicio Estrategia")
 
@@ -347,7 +353,7 @@ class UIManager:
                 self.graph_manager.nuevo_grafo_aleatorio()
 
         if tipo_grafo == "personalizado":
-            self.graph_manager.nuevo_grafo_personalizado2()
+            self.graph_manager.nuevo_grafo_personalizado2(st)
 
         elif tipo_grafo == 'Bipartito':
             numNodosGrupo1 = st.sidebar.number_input(
