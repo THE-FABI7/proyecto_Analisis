@@ -2,8 +2,8 @@ import re
 from streamlit_agraph import Config
 
 def Gui(directed: bool):
-    return Config(width='100%',
-                height=700,
+    return Config(width=1000,
+                height=1000,
                 directed=directed,
                 physics=False,
                 nodeHighlightBehavior=False, 

@@ -38,17 +38,8 @@ class Estrategia02:
             arista_minima_perdida = aristas_con_perdida.pop(0)
             aristas_eliminadas.append(arista_minima_perdida)
 
-            conjunto1_izquierda = []
-            conjunto1_derecha = list(conjunto1)
-            conjunto2_izquierda = []
-            conjunto2_derecha = list(conjunto2)
-
-            if arista_minima_perdida.source in conjunto1_derecha:
-                conjunto1_derecha.remove(arista_minima_perdida.source)
-                conjunto1_izquierda.append(arista_minima_perdida.source)
-            if arista_minima_perdida.to in conjunto2_derecha:
-                conjunto2_derecha.remove(arista_minima_perdida.to)
-                conjunto2_izquierda.append(arista_minima_perdida.to)
+            conjunto1_izquierda, conjunto1_derecha = self.actualizar_conjuntos(conjunto1, arista_minima_perdida, 'source')
+            conjunto2_izquierda, conjunto2_derecha = self.actualizar_conjuntos(conjunto2, arista_minima_perdida, 'to')
 
             distribucion_izquierda = prob_dist.tabla_distribucion_probabilidades(matrices, tuple(conjunto1_izquierda), tuple(conjunto2_izquierda), estado_actual, estados)
             distribucion_derecha = prob_dist.tabla_distribucion_probabilidades(matrices, tuple(conjunto1_derecha), tuple(conjunto2_derecha), estado_actual, estados)
@@ -65,6 +56,14 @@ class Estrategia02:
             particiones_evaluadas.append(particion)
 
         return mejor_particion, menor_diferencia, particiones_evaluadas, aristas_eliminadas
+
+    def actualizar_conjuntos(self, conjunto, arista, atributo):
+        izquierda = []
+        derecha = list(conjunto)
+        if getattr(arista, atributo) in derecha:
+            derecha.remove(getattr(arista, atributo))
+            izquierda.append(getattr(arista, atributo))
+        return izquierda, derecha
 
     def calcular_perdida(self, matrices, estados, distribucion_probabilidad_original, conjunto1, conjunto2, estado_actual, arista, prob_dist):
         conjunto1_copy = conjunto1.copy()
@@ -102,7 +101,7 @@ class Estrategia02:
         minima_perdida = float('inf')
 
         for arista in aristas:
-            perdida = self.calcular_perdida(matrices, estados, distribucion_probabilidad_original, conjunto1.copy(), conjunto2.copy(), estado_actual, arista)
+            perdida = self.calcular_perdida(matrices, estados, distribucion_probabilidad_original, conjunto1.copy(), conjunto2.copy(), estado_actual, arista, prob_dist)
             if perdida == 0:
                 aristas_eliminadas_perdida_cero.add((arista.source, arista.to))
             elif perdida < minima_perdida:
@@ -117,12 +116,7 @@ class Estrategia02:
         G.add_nodes_from(conjunto2, bipartite=1)
         G.add_edges_from([(nodo1, nodo2) for nodo1 in conjunto1 for nodo2 in conjunto2])
 
-        pos = {}
-        espacio_vertical = 1000 / (max(len(conjunto1), len(conjunto2)) + 1)
-        for i, nodo in enumerate(conjunto1, start=1):
-            pos[nodo] = [500, i * espacio_vertical]
-        for i, nodo in enumerate(conjunto2, start=1):
-            pos[nodo] = [900, i * espacio_vertical]
+        pos = self.calcular_posiciones(conjunto1, conjunto2)
 
         nodos_st = [Node(id=str(nodo), 
                         label=str(nodo),
@@ -143,6 +137,21 @@ class Estrategia02:
                 arista.color = 'violet'
                 arista.dashes = True
 
+        self.actualizar_colores_aristas(aristas_st, particion_izquierda, particion_derecha)
+
+        config = stag.Config(width=750, height=750, directed=False, physics=False)
+        return stag.agraph(nodes=nodos_st, edges=aristas_st, config=config)
+
+    def calcular_posiciones(self, conjunto1, conjunto2):
+        pos = {}
+        espacio_vertical = 1000 / (max(len(conjunto1), len(conjunto2)) + 1)
+        for i, nodo in enumerate(conjunto1, start=1):
+            pos[nodo] = [500, i * espacio_vertical]
+        for i, nodo in enumerate(conjunto2, start=1):
+            pos[nodo] = [900, i * espacio_vertical]
+        return pos
+
+    def actualizar_colores_aristas(self, aristas_st, particion_izquierda, particion_derecha):
         for nodo in particion_izquierda[1]:
             if nodo not in particion_derecha[1]:
                 for arista in aristas_st:
@@ -155,6 +164,3 @@ class Estrategia02:
                     if arista.source == str(nodo) and arista.target in map(str, particion_izquierda[0]):
                         arista.dashes = True
                         arista.color = 'rgba(254, 20, 56, 0.5)'
-
-        config = stag.Config(width=750, height=750, directed=False, physics=False)
-        return stag.agraph(nodes=nodos_st, edges=aristas_st, config=config)

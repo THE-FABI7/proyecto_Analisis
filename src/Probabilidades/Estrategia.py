@@ -7,6 +7,7 @@ from src.Probabilidades.Utilities import Utilities
 import streamlit_agraph as stag
 from Probabilidades.visualizer import Gui
 from src.Probabilidades.ProbabilityDistribution import ProbabilityDistribution
+import networkx as nx
 
 class Estrategia:
     def __init__(self):
@@ -20,6 +21,7 @@ class Estrategia:
         matrices = self.obtener_matrices()
         resultado, estados = self.distribucion_prob.crear_estados_transicion(matrices)
         distribucion_original = self.distribucion_prob.tabla_distribucion_probabilidades(matrices, conjunto1, conjunto2, estado_actual, estados)
+        #Puede cambiar la estrategia de particionamiento
         particion, diferencia, lista = self.planteamiento_voraz(matrices, estados, distribucion_original, conjunto1, conjunto2, estado_actual)
         return particion, diferencia, lista
 
@@ -146,19 +148,61 @@ class Estrategia:
     
     def dibujar_grafo(self, conjunto1, conjunto2, estado_actual, nodos, aristas, st):
         mejor_particion, _, _ = self.retornar_particion_adecuada(conjunto1, conjunto2, estado_actual)
+        if not mejor_particion:
+            return stag.agraph(nodes=nodos, edges=aristas, config=Gui(directed=False))
         particion1, particion2 = mejor_particion
-        for nodo in particion1[1]:
-            if nodo not in particion2[1]:
-                for arista in aristas:
-                    if arista.source == nodo and arista.to in particion2[0]:
-                        arista.dashes = True
-                        arista.color = 'rgba(254, 20, 56, 0.5)'
-        for nodo in particion2[1]:
-            if nodo not in particion1[1]:
-                for arista in aristas:
-                    if arista.source == nodo and arista.to in particion1[0]:
-                        arista.dashes = True
-                        arista.color = 'rgba(254, 20, 56, 0.5)'
 
-        grafo = stag.agraph(nodes=nodos, edges=aristas, config=Gui(True))
-        return grafo
+        # Crear el grafo con NetworkX
+        G = nx.Graph()
+        G.add_nodes_from(conjunto1, bipartite=0)
+        G.add_nodes_from(conjunto2, bipartite=1)
+        G.add_edges_from([(arista.source, arista.to) for arista in aristas])
+
+        # Posiciones de los nodos para mantener la estructura bipartita
+        pos = {}
+        
+        # Ajusta estos valores para cambiar la posición horizontal
+        x_conjunto1 = 250 
+        x_conjunto2 = 250  # Ajusta este valor para cambiar la posición horizontal
+
+        # Ajusta este valor para cambiar el espacio vertical
+        espacio_vertical = 500 / (max(len(conjunto1), len(conjunto2)) + 1)
+
+        # Colocar los nodos del conjunto1 (izquierda)
+        for i, nodo in enumerate(conjunto1, start=1):
+            pos[nodo] = [x_conjunto1, i * espacio_vertical]
+
+        # Filtrar apóstrofes de los nodos en conjunto2 y mantener el mapeo original
+        conjunto2_sin_apostrofe = {nodo: nodo.rstrip("'") for nodo in conjunto2}
+
+        # Colocar los nodos del conjunto2 (derecha)
+        for i, nodo in enumerate(conjunto2, start=1):
+            pos[conjunto2_sin_apostrofe[nodo]] = [x_conjunto2, i * espacio_vertical]
+
+        # Definir los nodos con su estilo
+        nodos_st = [stag.Node(id=str(nodo), 
+                            label=str(nodo),
+                            x=pos[nodo.rstrip("'")][0],
+                            y=pos[nodo.rstrip("'")][1],
+                            color='pink' if nodo in conjunto1 else 'lightblue')
+                    for nodo in G.nodes()]
+
+        # Definir las aristas con su estilo
+        aristas_st = [stag.Edge(source=str(arista.source), target=str(arista.to), type="CURVE_SMOOTH", width=3, directed=False)
+                    for arista in aristas]
+
+        # Actualizar colores de las aristas según la partición
+        for arista in aristas_st:
+            if (arista.source in particion1[1] and arista.to in particion2[0]) or (arista.source in particion2[1] and arista.to in particion1[0]):
+                arista.dashes = True
+                arista.color = 'rgba(254, 20, 56, 0.5)'
+
+        #config = stag.Config(width=1000, height=1000, directed=False, physics=False)
+        return stag.agraph(nodes=nodos_st, edges=aristas_st, config=Gui(directed=True))
+
+
+
+
+
+
+

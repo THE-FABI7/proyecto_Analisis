@@ -243,8 +243,7 @@ class UIManager:
                 particion_adecuada, d, lista = self.estrategia.retornar_particion_adecuada(estados_presentes, nodosG2_filtrados, estado_actual)
                 st.write(str(particion_adecuada), d)
                 
-                self.estrategia.dibujar_grafo(estados_presentes, nodosG2_filtrados, estado_actual, st.session_state.nodes, st.session_state.edges, Node, Edge)
-
+                self.estrategia.dibujar_grafo(estados_presentes, nodosG2_filtrados, estado_actual, st.session_state.nodes, st.session_state.edges, st)
 
             if archivo_selection == "Estrategia 2":
                 estados_presentes = st.multiselect("Seleccione los estados presentes", self.prob_dist.retornar_estados())
