@@ -1,6 +1,7 @@
 from Data.datapb.NodeDataRetrieve import NodeDataRetriever
 import numpy as np
 from scipy.stats import wasserstein_distance
+import pandas as pd
 
 class ProbabilityDistribution:
     """
@@ -15,7 +16,7 @@ class ProbabilityDistribution:
             dict: Diccionario de datos de transición.
         """
         retriever = NodeDataRetriever()
-        datos = retriever.get_five_node_data()
+        datos = retriever.get_six_node_data()
         return datos
 
     def tabla_distribucion_probabilidades(self, tabla, estadoActual, estadoFuturo, num, estados):
@@ -199,7 +200,7 @@ class ProbabilityDistribution:
         resultado, estados = self.crear_estados_transicion(datos)
         return estados
 
-    def retornarValorActual(self, conjunto1, conjunto2):
+    def retornar_valor_actual(self, conjunto1, conjunto2):
         lista = []
         matrices = self.datos_mt()
         

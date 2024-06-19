@@ -216,7 +216,7 @@ class UIManager:
 
                 estados_presentes = st.multiselect("Seleccione los estados presentes", self.prob_dist.retornar_estados())
                 estados_futuros = st.multiselect("Seleccione los estados futuros", self.prob_dist.retornar_futuros())
-                estado_actual = st.selectbox("Seleccione el estado actual", self.prob_dist.retornarValorActual(estados_presentes, estados_futuros))
+                estado_actual = st.selectbox("Seleccione el estado actual", self.prob_dist.retornar_valor_actual(estados_presentes, estados_futuros))
                 
                 st.session_state.nodes, st.session_state.edges = self.graph_manager.generar_grafoBipartito(estados_presentes, estados_futuros, Node, Edge)
                 
@@ -247,27 +247,27 @@ class UIManager:
 
 
             if archivo_selection == "Estrategia 2":
-                c1 = st.multiselect("Seleccione los estados presentes", self.prob_dist.retornar_estados())
-                c2 = st.multiselect("Seleccione los estados futuros", self.prob_dist.retornar_futuros())
-                estadoActual = st.selectbox("Seleccione el estado actual", self.prob_dist.retornarValorActual(c1, c2))
-                st.session_state.nodes, st.session_state.edges = self.graph_manager.generar_grafoBipartito(c1, c2, Node, Edge)
+                estados_presentes = st.multiselect("Seleccione los estados presentes", self.prob_dist.retornar_estados())
+                estados_futuros = st.multiselect("Seleccione los estados futuros", self.prob_dist.retornar_futuros())
+                estado_actual = st.selectbox("Seleccione el estado actual", self.prob_dist.retornar_valor_actual(estados_presentes, estados_futuros))
+                st.session_state.nodes, st.session_state.edges = self.graph_manager.generar_grafoBipartito(estados_presentes, estados_futuros, Node, Edge)
 
                 aux3 =[]
-                for i in c2:
+                for i in estados_futuros:
                     # verificar si el dato tiene ' al final por ejemplo "1'"
                     if "'" in i:
                         aux3.append(i[:-1])
                 if st.button("Calcular segunda estrategia"):
                     st.header("Mejor particion estrategia 2")
-                    particionn, diferencia, lista,l = self.estrategia2.estrategia2(c1, c2, estadoActual, st.session_state.edges)
+                    particionn, diferencia, lista,l = self.estrategia2.estrategia2(estados_presentes, estados_futuros, estado_actual, st.session_state.edges)
                     st.write(str(particionn), diferencia)
                     st.header("Distribuciones del grafo")
-                    st.session_state.aux = self.estrategia.retornar_distribuciones(c1, c2, estadoActual, st)
+                    st.session_state.aux = self.estrategia.retornar_distribuciones(estados_presentes, estados_futuros, estado_actual, st)
                     if st.session_state.aux is not None:
                         st.write(st.session_state.aux)
                     st.header("Particiones del grafo")
-                    df, particiones  = self.estrategia2.crear_particiones(c1, c2, estadoActual, st.session_state.edges)
-                    #self.estrategia2.pintarGrafoGenerado(c1, c2,estadoActual, st.session_state.nodes, st.session_state.edges,Node, Edge)
+                    df, particiones  = self.estrategia2.crear_particiones(estados_presentes, estados_futuros, estado_actual, st.session_state.edges)
+                    #self.estrategia2.pintarGrafoGenerado(estados_presentes, estados_futuros,estadoActual, st.session_state.nodes, st.session_state.edges,Node, Edge)
                     st.write(df)
                     
 

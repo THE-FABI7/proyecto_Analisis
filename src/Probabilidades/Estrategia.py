@@ -14,7 +14,7 @@ class Estrategia:
     
     def obtener_matrices(self):
         recuperador = NodeDataRetriever()
-        return recuperador.get_five_node_data()
+        return recuperador.get_six_node_data()
 
     def retornar_particion_adecuada(self, conjunto1, conjunto2, estado_actual):
         matrices = self.obtener_matrices()
