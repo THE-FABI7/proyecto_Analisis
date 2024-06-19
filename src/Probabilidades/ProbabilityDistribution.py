@@ -16,7 +16,10 @@ class ProbabilityDistribution:
             dict: Diccionario de datos de transición.
         """
         retriever = NodeDataRetriever()
-        return retriever.get_five_node_data()
+        #return retriever.get_three_node_data()
+        #return retriever.get_four_node_data()
+        #return retriever.get_five_node_data()
+        return retriever.get_six_node_data()
 
     def tabla_distribucion_probabilidades(self, matrices, estado_actual, estado_futuro, num, estados):
         """

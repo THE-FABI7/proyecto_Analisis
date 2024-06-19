@@ -5,29 +5,31 @@ import networkx as nx
 import numpy as np
 
 class Estrategia02:
+    def __init__(self):
+        self.distribucion_prob = ProbabilityDistribution()
+
     def estrategia2(self, conjunto1, conjunto2, estado_actual, aristas):
-        prob_dist = ProbabilityDistribution()
-        matrices = prob_dist.datos_mt()
-        _, estados = prob_dist.crear_estados_transicion(matrices)
-        distribucion_probabilidad_original = prob_dist.tabla_distribucion_probabilidades(matrices, conjunto1, conjunto2, estado_actual, estados)
+        matrices = self.distribucion_prob.datos_mt()
+        _, estados = self.distribucion_prob.crear_estados_transicion(matrices)
+        distribucion_probabilidad_original = self.distribucion_prob.tabla_distribucion_probabilidades(matrices, conjunto1, conjunto2, estado_actual, estados)
         mejor_particion = []
         menor_diferencia = float('inf')
         particiones_evaluadas = []
         aristas_eliminadas = []
         tiempo_ejecucion = 0
 
-        perdidas_aristas = {arista: self.calcular_perdida(matrices, estados, distribucion_probabilidad_original, conjunto1.copy(), conjunto2.copy(), estado_actual, arista, prob_dist) for arista in aristas}
+        perdidas_aristas = {arista: self.calcular_perdida(matrices, estados, distribucion_probabilidad_original, conjunto1.copy(), conjunto2.copy(), estado_actual, arista, self.distribucion_prob) for arista in aristas}
 
         aristas_con_perdida = [arista for arista, perdida in perdidas_aristas.items() if perdida != 0]
 
         if not aristas_con_perdida:
             mejor_particion = [(tuple(conjunto2), ()), ((), tuple(conjunto1))]
-            distribucion_izquierda = prob_dist.tabla_distribucion_probabilidades(matrices, (), tuple(conjunto2), estado_actual, estados)
-            distribucion_derecha = prob_dist.tabla_distribucion_probabilidades(matrices, tuple(conjunto1), (), estado_actual, estados)
+            distribucion_izquierda = self.distribucion_prob.tabla_distribucion_probabilidades(matrices, (), tuple(conjunto2), estado_actual, estados)
+            distribucion_derecha = self.distribucion_prob.tabla_distribucion_probabilidades(matrices, tuple(conjunto1), (), estado_actual, estados)
             p1 = distribucion_izquierda[1][1:]
             p2 = distribucion_derecha[1][1:]
-            prod_tensor = prob_dist.producto_tensor(p1, p2)
-            diferencia = prob_dist.calcular_emd(distribucion_probabilidad_original[1][1:], prod_tensor)
+            prod_tensor = self.distribucion_prob.producto_tensor(p1, p2)
+            diferencia = self.distribucion_prob.calcular_emd(distribucion_probabilidad_original[1][1:], prod_tensor)
             particion = [(tuple(conjunto2), ()), ((), tuple(conjunto1)), str(diferencia), str(tiempo_ejecucion)]
             particiones_evaluadas.append(particion)
             return mejor_particion, diferencia, tiempo_ejecucion, particiones_evaluadas, aristas_eliminadas
@@ -41,12 +43,12 @@ class Estrategia02:
             conjunto1_izquierda, conjunto1_derecha = self.actualizar_conjuntos(conjunto1, arista_minima_perdida, 'source')
             conjunto2_izquierda, conjunto2_derecha = self.actualizar_conjuntos(conjunto2, arista_minima_perdida, 'to')
 
-            distribucion_izquierda = prob_dist.tabla_distribucion_probabilidades(matrices, tuple(conjunto1_izquierda), tuple(conjunto2_izquierda), estado_actual, estados)
-            distribucion_derecha = prob_dist.tabla_distribucion_probabilidades(matrices, tuple(conjunto1_derecha), tuple(conjunto2_derecha), estado_actual, estados)
+            distribucion_izquierda = self.distribucion_prob.tabla_distribucion_probabilidades(matrices, tuple(conjunto1_izquierda), tuple(conjunto2_izquierda), estado_actual, estados)
+            distribucion_derecha = self.distribucion_prob.tabla_distribucion_probabilidades(matrices, tuple(conjunto1_derecha), tuple(conjunto2_derecha), estado_actual, estados)
             p1 = distribucion_izquierda[1][1:]
             p2 = distribucion_derecha[1][1:]
-            prod_tensor = prob_dist.producto_tensor(p1, p2)
-            diferencia = prob_dist.calcular_emd(distribucion_probabilidad_original[1][1:], prod_tensor)
+            prod_tensor = self.distribucion_prob.producto_tensor(p1, p2)
+            diferencia = self.distribucion_prob.calcular_emd(distribucion_probabilidad_original[1][1:], prod_tensor)
 
             if diferencia < menor_diferencia:
                 menor_diferencia = diferencia
@@ -65,7 +67,7 @@ class Estrategia02:
             izquierda.append(getattr(arista, atributo))
         return izquierda, derecha
 
-    def calcular_perdida(self, matrices, estados, distribucion_probabilidad_original, conjunto1, conjunto2, estado_actual, arista, prob_dist):
+    def calcular_perdida(self, matrices, estados, distribucion_probabilidad_original, conjunto1, conjunto2, estado_actual, arista, distribucion_prob):
         conjunto1_copy = conjunto1.copy()
         conjunto2_copy = conjunto2.copy()
 
@@ -78,9 +80,9 @@ class Estrategia02:
         else:
             return float('inf')
 
-        distribucion_izquierda = prob_dist.tabla_distribucion_probabilidades(matrices, conjunto1_copy, conjunto2_copy, estado_actual, estados)
-        prod_tensor = prob_dist.producto_tensor(distribucion_izquierda[1][1:], distribucion_izquierda[1][1:])
-        diferencia = prob_dist.calcular_emd(distribucion_probabilidad_original[1][1:], prod_tensor)
+        distribucion_izquierda = distribucion_prob.tabla_distribucion_probabilidades(matrices, conjunto1_copy, conjunto2_copy, estado_actual, estados)
+        prod_tensor = distribucion_prob.producto_tensor(distribucion_izquierda[1][1:], distribucion_izquierda[1][1:])
+        diferencia = distribucion_prob.calcular_emd(distribucion_probabilidad_original[1][1:], prod_tensor)
         return diferencia
 
     def crear_particiones(self, conjunto1, conjunto2, estado_actual, aristas):
@@ -90,18 +92,18 @@ class Estrategia02:
         return df, particiones
 
     def dibujar_grafo(self, conjunto1, conjunto2, estado_actual, nodos, aristas, Node, Edge):
-        prob_dist = ProbabilityDistribution()
-        matrices = prob_dist.datos_mt()
-        _, estados = prob_dist.crear_estados_transicion(matrices)
+        self.distribucion_prob = ProbabilityDistribution()
+        matrices = self.distribucion_prob.datos_mt()
+        _, estados = self.distribucion_prob.crear_estados_transicion(matrices)
 
-        distribucion_probabilidad_original = prob_dist.tabla_distribucion_probabilidades(matrices, conjunto1, conjunto2, estado_actual, estados)
+        distribucion_probabilidad_original = self.distribucion_prob.tabla_distribucion_probabilidades(matrices, conjunto1, conjunto2, estado_actual, estados)
 
         aristas_eliminadas_perdida_cero = set()
         arista_minima_perdida = None
         minima_perdida = float('inf')
 
         for arista in aristas:
-            perdida = self.calcular_perdida(matrices, estados, distribucion_probabilidad_original, conjunto1.copy(), conjunto2.copy(), estado_actual, arista, prob_dist)
+            perdida = self.calcular_perdida(matrices, estados, distribucion_probabilidad_original, conjunto1.copy(), conjunto2.copy(), estado_actual, arista, self.distribucion_prob)
             if perdida == 0:
                 aristas_eliminadas_perdida_cero.add((arista.source, arista.to))
             elif perdida < minima_perdida:

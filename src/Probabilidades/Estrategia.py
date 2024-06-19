@@ -12,13 +12,10 @@ import networkx as nx
 class Estrategia:
     def __init__(self):
         self.distribucion_prob = ProbabilityDistribution()
-    
-    def obtener_matrices(self):
-        recuperador = NodeDataRetriever()
-        return recuperador.get_six_node_data()
 
     def retornar_particion_adecuada(self, conjunto1, conjunto2, estado_actual):
-        matrices = self.obtener_matrices()
+
+        matrices = self.distribucion_prob.datos_mt()
         resultado, estados = self.distribucion_prob.crear_estados_transicion(matrices)
         distribucion_original = self.distribucion_prob.tabla_distribucion_probabilidades(matrices, conjunto1, conjunto2, estado_actual, estados)
         #Puede cambiar la estrategia de particionamiento
@@ -128,14 +125,14 @@ class Estrategia:
         return mejor_particion, menor_diferencia, df_lista_particiones
 
     def crear_particiones(self, conjunto1, conjunto2, estado_actual):
-        matrices = self.obtener_matrices()
+        matrices = self.distribucion_prob.datos_mt()
         particiones = []
         particion, diferencia, lista = self.retornar_particion_adecuada(conjunto1, conjunto2, estado_actual)
         df = pd.DataFrame(lista, columns=['Conjunto 1', 'Conjunto 2', 'Diferencia'])
         return df, particiones
     
     def retornar_distribuciones(self, estado_actual, estado_futuro, valor_actual, st):
-        matrices = self.obtener_matrices()
+        matrices = self.distribucion_prob.datos_mt()
         resultado, estados = self.distribucion_prob.crear_estados_transicion(matrices)
         datos = self.distribucion_prob.tabla_distribucion_probabilidades(matrices, estado_actual, estado_futuro, valor_actual, estados)
         lista = [str(datos[0][0])]
